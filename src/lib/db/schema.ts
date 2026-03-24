@@ -212,6 +212,34 @@ CREATE TABLE IF NOT EXISTS task_deliverables (
   created_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Insurance Ad Intel cache table
+CREATE TABLE IF NOT EXISTS insurance_ad_intel (
+  id TEXT PRIMARY KEY,
+  keyword TEXT NOT NULL,
+  keyword_language TEXT DEFAULT 'en' CHECK (keyword_language IN ('en', 'es')),
+  region TEXT DEFAULT 'US' CHECK (region IN ('US', 'PR')),
+  page_name TEXT NOT NULL,
+  page_id TEXT,
+  ad_snapshot_url TEXT,
+  destination_url TEXT,
+  media_url TEXT,
+  media_type TEXT DEFAULT 'unknown' CHECK (media_type IN ('image', 'video', 'carousel', 'unknown')),
+  ad_copy TEXT,
+  headline TEXT,
+  cta TEXT,
+  platforms TEXT,
+  first_seen_at TEXT,
+  last_seen_at TEXT,
+  is_active INTEGER DEFAULT 1,
+  countries TEXT,
+  score REAL DEFAULT 0,
+  score_breakdown TEXT,
+  tags TEXT,
+  raw_payload TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_agent_id);
@@ -228,4 +256,9 @@ CREATE INDEX IF NOT EXISTS idx_workflow_templates_workspace ON workflow_template
 CREATE INDEX IF NOT EXISTS idx_task_roles_task ON task_roles(task_id);
 CREATE INDEX IF NOT EXISTS idx_knowledge_entries_workspace ON knowledge_entries(workspace_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_knowledge_entries_task ON knowledge_entries(task_id);
+CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_keyword ON insurance_ad_intel(keyword);
+CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_region ON insurance_ad_intel(region);
+CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_keyword_language ON insurance_ad_intel(keyword_language);
+CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_score ON insurance_ad_intel(score DESC);
+CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_updated ON insurance_ad_intel(updated_at DESC);
 `;

@@ -635,6 +635,66 @@ const migrations: Migration[] = [
         console.log('[Migration 014] Added images column to tasks');
       }
     }
+  },
+  {
+    id: '015',
+    name: 'add_insurance_ad_intel_table',
+    up: (db) => {
+      console.log('[Migration 015] Adding insurance_ad_intel table...');
+
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS insurance_ad_intel (
+          id TEXT PRIMARY KEY,
+          keyword TEXT NOT NULL,
+          keyword_language TEXT DEFAULT 'en' CHECK (keyword_language IN ('en', 'es')),
+          region TEXT DEFAULT 'US' CHECK (region IN ('US', 'PR')),
+          page_name TEXT NOT NULL,
+          page_id TEXT,
+          ad_snapshot_url TEXT,
+          destination_url TEXT,
+          media_url TEXT,
+          media_type TEXT DEFAULT 'unknown' CHECK (media_type IN ('image', 'video', 'carousel', 'unknown')),
+          ad_copy TEXT,
+          headline TEXT,
+          cta TEXT,
+          platforms TEXT,
+          first_seen_at TEXT,
+          last_seen_at TEXT,
+          is_active INTEGER DEFAULT 1,
+          countries TEXT,
+          score REAL DEFAULT 0,
+          score_breakdown TEXT,
+          tags TEXT,
+          raw_payload TEXT,
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        )
+      `);
+
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_keyword ON insurance_ad_intel(keyword)`);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_region ON insurance_ad_intel(region)`);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_keyword_language ON insurance_ad_intel(keyword_language)`);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_score ON insurance_ad_intel(score DESC)`);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_updated ON insurance_ad_intel(updated_at DESC)`);
+    }
+  },
+  {
+    id: '016',
+    name: 'add_region_and_language_to_insurance_ad_intel',
+    up: (db) => {
+      console.log('[Migration 016] Adding region and keyword_language to insurance_ad_intel...');
+      const columns = db.prepare("PRAGMA table_info(insurance_ad_intel)").all() as { name: string }[];
+
+      if (!columns.some((col) => col.name === 'keyword_language')) {
+        db.exec(`ALTER TABLE insurance_ad_intel ADD COLUMN keyword_language TEXT DEFAULT 'en'`);
+      }
+      if (!columns.some((col) => col.name === 'region')) {
+        db.exec(`ALTER TABLE insurance_ad_intel ADD COLUMN region TEXT DEFAULT 'US'`);
+      }
+
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_region ON insurance_ad_intel(region)`);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_ad_intel_keyword_language ON insurance_ad_intel(keyword_language)`);
+    }
   }
 ];
 
