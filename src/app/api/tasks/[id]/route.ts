@@ -18,7 +18,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const task = queryOne<Task>(
+    const task = await queryOne<Task>(
       `SELECT t.*,
         aa.name as assigned_agent_name,
         aa.avatar_emoji as assigned_agent_emoji
@@ -60,7 +60,7 @@ export async function PATCH(
     const validatedData = validation.data;
     let nextStatus = validatedData.status;
 
-    const existing = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
+    const existing = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
     if (!existing) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
@@ -78,7 +78,7 @@ export async function PATCH(
     // If an agent is trying to move review→done, they must be a master agent
     // User-initiated moves (no agent ID) are allowed
     if (validatedData.status === 'done' && existing.status === 'review' && validatedData.updated_by_agent_id) {
-      const updatingAgent = queryOne<Agent>(
+      const updatingAgent = await queryOne<Agent>(
         'SELECT is_master FROM agents WHERE id = ?',
         [validatedData.updated_by_agent_id]
       );
@@ -136,7 +136,7 @@ export async function PATCH(
 
     // Auto-assign default workflow template if task has none
     if (!existing.workflow_template_id && validatedData.assigned_agent_id) {
-      const defaultTpl = queryOne<{ id: string }>(
+      const defaultTpl = await queryOne<{ id: string }>(
         'SELECT id FROM workflow_templates WHERE workspace_id = ? AND is_default = 1 LIMIT 1',
         [existing.workspace_id]
       );
@@ -144,8 +144,8 @@ export async function PATCH(
         updates.push('workflow_template_id = ?');
         values.push(defaultTpl.id);
         // Also populate task_roles now that we have a template
-        run('UPDATE tasks SET workflow_template_id = ? WHERE id = ?', [defaultTpl.id, id]);
-        populateTaskRolesFromAgents(id, existing.workspace_id);
+        await run('UPDATE tasks SET workflow_template_id = ? WHERE id = ?', [defaultTpl.id, id]);
+        await populateTaskRolesFromAgents(id, existing.workspace_id);
       }
     }
 
@@ -167,7 +167,7 @@ export async function PATCH(
 
       // Hard evidence gate for forward-stage transitions and completion
       const enteringQualityStage = ['testing', 'review', 'verification', 'done'].includes(nextStatus);
-      if (enteringQualityStage && !boardOverrideAllowed && !hasStageEvidence(id)) {
+      if (enteringQualityStage && !boardOverrideAllowed && !await hasStageEvidence(id)) {
         return NextResponse.json(
           { error: 'Evidence gate failed: stage transition requires at least one deliverable and one activity note' },
           { status: 400 }
@@ -180,7 +180,7 @@ export async function PATCH(
         return NextResponse.json({ error: 'status_reason is required when failing a stage' }, { status: 400 });
       }
 
-      if (nextStatus === 'done' && !boardOverrideAllowed && !taskCanBeDone(id)) {
+      if (nextStatus === 'done' && !boardOverrideAllowed && !await taskCanBeDone(id)) {
         return NextResponse.json({ error: 'Cannot mark done: validation/evidence requirements not met' }, { status: 400 });
       }
 
@@ -188,7 +188,7 @@ export async function PATCH(
       values.push(nextStatus);
 
       if (boardOverrideAllowed) {
-        auditBoardOverride(id, existing.status, nextStatus, body.override_reason);
+        await auditBoardOverride(id, existing.status, nextStatus, body.override_reason);
       }
 
       // Auto-dispatch when moving to assigned (if we have a valid assignee)
@@ -198,12 +198,12 @@ export async function PATCH(
 
       // When a task completes, reset the assigned agent to standby (if not working on other tasks)
       if (nextStatus === 'done' && existing.assigned_agent_id) {
-        const otherActiveTasks = queryOne<{ cnt: number }>(
+        const otherActiveTasks = await queryOne<{ cnt: number }>(
           `SELECT COUNT(*) as cnt FROM tasks WHERE assigned_agent_id = ? AND id != ? AND status IN ('assigned', 'in_progress', 'testing', 'verification')`,
           [existing.assigned_agent_id, id]
         );
         if (!otherActiveTasks || otherActiveTasks.cnt === 0) {
-          run(
+          await run(
             `UPDATE agents SET status = 'standby', updated_at = datetime('now') WHERE id = ? AND status = 'working'`,
             [existing.assigned_agent_id]
           );
@@ -212,7 +212,7 @@ export async function PATCH(
 
       // Log status change event
       const eventType = nextStatus === 'done' ? 'task_completed' : 'task_status_changed';
-      run(
+      await run(
         `INSERT INTO events (id, type, task_id, message, created_at)
          VALUES (?, ?, ?, ?, ?)`,
         [uuidv4(), eventType, id, `Task "${existing.title}" moved to ${nextStatus}`, now]
@@ -225,9 +225,9 @@ export async function PATCH(
       values.push(validatedData.assigned_agent_id);
 
       if (validatedData.assigned_agent_id) {
-        const agent = queryOne<Agent>('SELECT name FROM agents WHERE id = ?', [validatedData.assigned_agent_id]);
+        const agent = await queryOne<Agent>('SELECT name FROM agents WHERE id = ?', [validatedData.assigned_agent_id]);
         if (agent) {
-          run(
+          await run(
             `INSERT INTO events (id, type, agent_id, task_id, message, created_at)
              VALUES (?, ?, ?, ?, ?, ?)`,
             [uuidv4(), 'task_assigned', validatedData.assigned_agent_id, id, `"${existing.title}" assigned to ${agent.name}`, now]
@@ -261,10 +261,10 @@ export async function PATCH(
     values.push(now);
     values.push(id);
 
-    run(`UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`, values);
+    await run(`UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`, values);
 
     // Fetch updated task with all joined fields
-    const task = queryOne<Task>(
+    const task = await queryOne<Task>(
       `SELECT t.*,
         aa.name as assigned_agent_name,
         aa.avatar_emoji as assigned_agent_emoji,
@@ -310,12 +310,12 @@ export async function PATCH(
             const errorText = await dispatchRes.text();
             const dispatchError = `Auto-dispatch failed (${dispatchRes.status}): ${errorText}`;
             console.error(dispatchError);
-            run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [dispatchError, now, id]);
+            await run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [dispatchError, now, id]);
           }
         } catch (err) {
           const dispatchError = `Auto-dispatch error: ${(err as Error).message}`;
           console.error(dispatchError);
-          run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [dispatchError, now, id]);
+          await run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [dispatchError, now, id]);
         }
       }
     }
@@ -336,7 +336,7 @@ export async function PATCH(
       if (stageResult.handedOff) {
         console.log(`[PATCH] Workflow handoff: ${existing.status} → ${nextStatus} → agent ${stageResult.newAgentName}`);
         // Re-fetch task to include updated agent assignment
-        const refreshed = queryOne<Task>(
+        const refreshed = await queryOne<Task>(
           `SELECT t.*, aa.name as assigned_agent_name, aa.avatar_emoji as assigned_agent_emoji
            FROM tasks t LEFT JOIN agents aa ON t.assigned_agent_id = aa.id WHERE t.id = ?`,
           [id]
@@ -345,7 +345,7 @@ export async function PATCH(
       } else if (!stageResult.success && stageResult.error) {
         console.warn(`[PATCH] Workflow handoff blocked: ${stageResult.error}`);
         // Broadcast so the UI picks up the dispatch error banner
-        const refreshed = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
+        const refreshed = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
         if (refreshed) broadcast({ type: 'task_updated', payload: refreshed });
       }
     }
@@ -355,7 +355,7 @@ export async function PATCH(
       const currentStatus = nextStatus || existing.status;
       console.log(`[PATCH] Agent assigned in workflow stage "${currentStatus}" — dispatching`);
       // Clear any previous dispatch error
-      run('UPDATE tasks SET planning_dispatch_error = NULL, updated_at = ? WHERE id = ?', [now, id]);
+      await run('UPDATE tasks SET planning_dispatch_error = NULL, updated_at = ? WHERE id = ?', [now, id]);
 
       const missionControlUrl = getMissionControlUrl();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -370,14 +370,14 @@ export async function PATCH(
         if (!dispatchRes.ok) {
           const errorText = await dispatchRes.text();
           console.error(`[PATCH] Workflow stage dispatch failed: ${errorText}`);
-          run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [`Dispatch failed (${dispatchRes.status}): ${errorText}`, now, id]);
+          await run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [`Dispatch failed (${dispatchRes.status}): ${errorText}`, now, id]);
         }
       } catch (err) {
         console.error('[PATCH] Workflow stage dispatch error:', err);
-        run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [`Dispatch error: ${(err as Error).message}`, now, id]);
+        await run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [`Dispatch error: ${(err as Error).message}`, now, id]);
       }
       // Re-broadcast with latest state
-      const refreshed = queryOne<Task>(
+      const refreshed = await queryOne<Task>(
         `SELECT t.*, aa.name as assigned_agent_name, aa.avatar_emoji as assigned_agent_emoji
          FROM tasks t LEFT JOIN agents aa ON t.assigned_agent_id = aa.id WHERE t.id = ?`,
         [id]
@@ -391,7 +391,7 @@ export async function PATCH(
       const agentToCheck = existing.assigned_agent_id;
       if (agentToCheck) {
         // Check if this agent still has any active (working) tasks
-        const activeTasks = queryOne<{ count: number }>(
+        const activeTasks = await queryOne<{ count: number }>(
           `SELECT COUNT(*) as count FROM tasks
            WHERE assigned_agent_id = ?
              AND status IN ('assigned', 'in_progress', 'testing', 'verification')
@@ -406,7 +406,7 @@ export async function PATCH(
         ) && ['assigned', 'in_progress', 'testing', 'verification'].includes(nextStatus);
 
         if (!currentTaskStillActive && (!activeTasks || activeTasks.count === 0)) {
-          run(
+          await run(
             'UPDATE agents SET status = ?, updated_at = ? WHERE id = ? AND status = ?',
             ['standby', now, agentToCheck, 'working']
           );
@@ -442,7 +442,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const existing = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
+    const existing = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
 
     if (!existing) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
@@ -450,7 +450,7 @@ export async function DELETE(
 
     // Reset agent status if this was their only active task
     if (existing.assigned_agent_id) {
-      const otherActive = queryOne<{ count: number }>(
+      const otherActive = await queryOne<{ count: number }>(
         `SELECT COUNT(*) as count FROM tasks
          WHERE assigned_agent_id = ?
            AND status IN ('assigned', 'in_progress', 'testing', 'verification')
@@ -458,7 +458,7 @@ export async function DELETE(
         [existing.assigned_agent_id, id]
       );
       if (!otherActive || otherActive.count === 0) {
-        run(
+        await run(
           'UPDATE agents SET status = ?, updated_at = ? WHERE id = ? AND status = ?',
           ['standby', new Date().toISOString(), existing.assigned_agent_id, 'working']
         );
@@ -467,13 +467,13 @@ export async function DELETE(
 
     // Delete or nullify related records first (foreign key constraints)
     // Note: task_activities and task_deliverables have ON DELETE CASCADE
-    run('DELETE FROM openclaw_sessions WHERE task_id = ?', [id]);
-    run('DELETE FROM events WHERE task_id = ?', [id]);
+    await run('DELETE FROM openclaw_sessions WHERE task_id = ?', [id]);
+    await run('DELETE FROM events WHERE task_id = ?', [id]);
     // Conversations reference tasks - nullify or delete
-    run('UPDATE conversations SET task_id = NULL WHERE task_id = ?', [id]);
+    await run('UPDATE conversations SET task_id = NULL WHERE task_id = ?', [id]);
 
     // Now delete the task (cascades to task_activities and task_deliverables)
-    run('DELETE FROM tasks WHERE id = ?', [id]);
+    await run('DELETE FROM tasks WHERE id = ?', [id]);
 
     // Broadcast deletion via SSE
     broadcast({

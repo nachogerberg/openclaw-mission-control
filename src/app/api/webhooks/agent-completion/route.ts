@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Handle direct task_id completion
     if (body.task_id) {
-      const task = queryOne<Task & { assigned_agent_name?: string }>(
+      const task = await queryOne<Task & { assigned_agent_name?: string }>(
         `SELECT t.*, a.name as assigned_agent_name
          FROM tasks t
          LEFT JOIN agents a ON t.assigned_agent_id = a.id
@@ -82,14 +82,14 @@ export async function POST(request: NextRequest) {
       // Only move to testing if not already in testing, review, or done
       // (Don't overwrite user's approval or testing results)
       if (task.status !== 'testing' && task.status !== 'review' && task.status !== 'done') {
-        run(
+        await run(
           'UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?',
           ['testing', now, task.id]
         );
       }
 
       // Log completion
-      run(
+      await run(
         `INSERT INTO events (id, type, agent_id, task_id, message, created_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
       // Set agent back to standby
       if (task.assigned_agent_id) {
-        run(
+        await run(
           'UPDATE agents SET status = ?, updated_at = ? WHERE id = ?',
           ['standby', now, task.assigned_agent_id]
         );
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       const summary = completionMatch[1].trim();
 
       // Find agent by session
-      const session = queryOne<OpenClawSession>(
+      const session = await queryOne<OpenClawSession>(
         'SELECT * FROM openclaw_sessions WHERE openclaw_session_id = ? AND status = ?',
         [body.session_id, 'active']
       );
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Find active task for this agent
-      const task = queryOne<Task & { assigned_agent_name?: string }>(
+      const task = await queryOne<Task & { assigned_agent_name?: string }>(
         `SELECT t.*, a.name as assigned_agent_name
          FROM tasks t
          LEFT JOIN agents a ON t.assigned_agent_id = a.id
@@ -166,14 +166,14 @@ export async function POST(request: NextRequest) {
       // Only move to testing if not already in testing, review, or done
       // (Don't overwrite user's approval or testing results)
       if (task.status !== 'testing' && task.status !== 'review' && task.status !== 'done') {
-        run(
+        await run(
           'UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?',
           ['testing', now, task.id]
         );
       }
 
       // Log completion with summary
-      run(
+      await run(
         `INSERT INTO events (id, type, agent_id, task_id, message, created_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
       );
 
       // Set agent back to standby
-      run(
+      await run(
         'UPDATE agents SET status = ?, updated_at = ? WHERE id = ?',
         ['standby', now, session.agent_id]
       );
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
-    const recentCompletions = queryAll(
+    const recentCompletions = await queryAll(
       `SELECT e.*, a.name as agent_name, t.title as task_title
        FROM events e
        LEFT JOIN agents a ON e.agent_id = a.id

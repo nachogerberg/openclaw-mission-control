@@ -18,6 +18,7 @@ export function Header({ workspace, isPortrait = true }: HeaderProps) {
   const { agents, tasks, isOnline } = useMissionControl();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeSubAgents, setActiveSubAgents] = useState(0);
+  const [sourceTelemetry, setSourceTelemetry] = useState<Array<{ source_name: string; status: 'online' | 'degraded' | 'offline'; last_ping: string; record_count: number }>>([]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -25,26 +26,37 @@ export function Header({ workspace, isPortrait = true }: HeaderProps) {
   }, []);
 
   useEffect(() => {
-    const loadSubAgentCount = async () => {
+    const loadRealtimeHeaderData = async () => {
       try {
-        const res = await fetch('/api/openclaw/sessions?session_type=subagent&status=active');
-        if (res.ok) {
-          const sessions = await res.json();
+        const [sessionsRes, telemetryRes] = await Promise.all([
+          fetch('/api/openclaw/sessions?session_type=subagent&status=active'),
+          fetch('/api/source-telemetry'),
+        ]);
+
+        if (sessionsRes.ok) {
+          const sessions = await sessionsRes.json();
           setActiveSubAgents(sessions.length);
         }
+
+        if (telemetryRes.ok) {
+          const telemetry = await telemetryRes.json();
+          setSourceTelemetry(Array.isArray(telemetry) ? telemetry : []);
+        }
       } catch (error) {
-        console.error('Failed to load sub-agent count:', error);
+        console.error('Failed to load realtime header data:', error);
       }
     };
 
-    loadSubAgentCount();
-    const interval = setInterval(loadSubAgentCount, 30000);
+    loadRealtimeHeaderData();
+    const interval = setInterval(loadRealtimeHeaderData, 30000);
     return () => clearInterval(interval);
   }, []);
 
   const workingAgents = agents.filter((a) => a.status === 'working').length;
   const activeAgents = workingAgents + activeSubAgents;
   const tasksInQueue = tasks.filter((t) => t.status !== 'done' && t.status !== 'review').length;
+  const onlineSources = sourceTelemetry.filter((s) => s.status === 'online').length;
+  const totalSourceRecords = sourceTelemetry.reduce((sum, s) => sum + (s.record_count || 0), 0);
 
   const portraitWorkspaceHeader = !!workspace && isPortrait;
 
@@ -94,6 +106,13 @@ export function Header({ workspace, isPortrait = true }: HeaderProps) {
                 <span className="text-mc-accent-purple font-semibold">{tasksInQueue}</span>
                 <span className="text-mc-text-secondary">queued</span>
               </div>
+              <div className="min-h-11 rounded border border-mc-border bg-mc-bg-tertiary px-2 flex items-center justify-center gap-1.5 text-xs col-span-2">
+                <span className="text-mc-accent-green font-semibold">{onlineSources}/{sourceTelemetry.length || 0}</span>
+                <span className="text-mc-text-secondary">sources online</span>
+                <span className="text-mc-text-secondary">·</span>
+                <span className="text-mc-accent-yellow font-semibold">{totalSourceRecords.toLocaleString()}</span>
+                <span className="text-mc-text-secondary">records</span>
+              </div>
             </div>
           </div>
         </>
@@ -134,6 +153,14 @@ export function Header({ workspace, isPortrait = true }: HeaderProps) {
               <div className="text-center">
                 <div className="text-2xl font-bold text-mc-accent-purple">{tasksInQueue}</div>
                 <div className="text-xs text-mc-text-secondary uppercase">Tasks in Queue</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-mc-accent-green">{onlineSources}/{sourceTelemetry.length || 0}</div>
+                <div className="text-xs text-mc-text-secondary uppercase">Sources Online</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-mc-accent-yellow">{totalSourceRecords.toLocaleString()}</div>
+                <div className="text-xs text-mc-text-secondary uppercase">Source Records</div>
               </div>
             </div>
           )}

@@ -25,7 +25,7 @@ export async function notifyLearner(
   }
 ): Promise<void> {
   // Find learner role assignment for this task
-  const learnerRole = queryOne<TaskRole & { agent_name: string; session_key_prefix?: string }>(
+  const learnerRole = await queryOne<TaskRole & { agent_name: string; session_key_prefix?: string }>(
     `SELECT tr.*, a.name as agent_name, a.session_key_prefix
      FROM task_roles tr
      JOIN agents a ON tr.agent_id = a.id
@@ -35,14 +35,14 @@ export async function notifyLearner(
 
   if (!learnerRole) return; // No learner assigned, skip
 
-  const task = queryOne<{ title: string; workspace_id: string }>(
+  const task = await queryOne<{ title: string; workspace_id: string }>(
     'SELECT title, workspace_id FROM tasks WHERE id = ?',
     [taskId]
   );
   if (!task) return;
 
   // Find or create a session for the learner
-  let session = queryOne<OpenClawSession>(
+  let session = await queryOne<OpenClawSession>(
     'SELECT * FROM openclaw_sessions WHERE agent_id = ? AND status = ?',
     [learnerRole.agent_id, 'active']
   );
@@ -88,13 +88,13 @@ Focus on:
       const sessionId = uuidv4();
       const openclawSessionId = `mission-control-${learnerRole.agent_name.toLowerCase().replace(/\s+/g, '-')}`;
 
-      run(
+      await run(
         `INSERT INTO openclaw_sessions (id, agent_id, openclaw_session_id, channel, status, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
         [sessionId, learnerRole.agent_id, openclawSessionId, 'mission-control', 'active']
       );
 
-      session = queryOne<OpenClawSession>('SELECT * FROM openclaw_sessions WHERE id = ?', [sessionId]);
+      session = await queryOne<OpenClawSession>('SELECT * FROM openclaw_sessions WHERE id = ?', [sessionId]);
     }
 
     if (session) {
@@ -117,9 +117,9 @@ Focus on:
  * Get relevant knowledge entries to inject into a builder's dispatch context.
  * Called before dispatching to the builder agent.
  */
-export function getRelevantKnowledge(workspaceId: string, taskTitle: string, limit = 5): KnowledgeEntry[] {
+export async function getRelevantKnowledge(workspaceId: string, taskTitle: string, limit = 5): Promise<KnowledgeEntry[]> {
   // Get recent knowledge entries from this workspace, prioritize high confidence
-  const entries = queryAll<KnowledgeEntry & { tags: string }>(
+  const entries = await queryAll<KnowledgeEntry & { tags: string }>(
     `SELECT * FROM knowledge_entries
      WHERE workspace_id = ?
      ORDER BY confidence DESC, created_at DESC

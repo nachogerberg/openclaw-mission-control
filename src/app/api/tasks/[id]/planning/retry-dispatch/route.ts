@@ -17,7 +17,7 @@ export async function POST(
 
   try {
     // Get task details
-    const task = queryOne<{
+    const task = await queryOne<{
       id: string;
       title: string;
       assigned_agent_id?: string;
@@ -46,7 +46,7 @@ export async function POST(
     }
 
     // Get agent name for logging
-    const agent = queryOne<{ name: string }>('SELECT name FROM agents WHERE id = ?', [task.assigned_agent_id]);
+    const agent = await queryOne<{ name: string }>('SELECT name FROM agents WHERE id = ?', [task.assigned_agent_id]);
 
     // Trigger the dispatch
     const result = await triggerAutoDispatch({
@@ -59,7 +59,7 @@ export async function POST(
 
     // Update task state based on dispatch result — preserve planning data either way
     if (result.success) {
-      run(`
+      await run(`
         UPDATE tasks
         SET planning_dispatch_error = NULL,
             updated_at = datetime('now')
@@ -67,7 +67,7 @@ export async function POST(
       `, [taskId]);
     } else {
       // Keep planning data intact so user can retry again without re-planning
-      run(`
+      await run(`
         UPDATE tasks
         SET planning_dispatch_error = ?,
             status_reason = ?,
@@ -92,7 +92,7 @@ export async function POST(
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     // Keep planning data intact — just record the error
-    run(`
+    await run(`
       UPDATE tasks
       SET planning_dispatch_error = ?,
           status_reason = ?,

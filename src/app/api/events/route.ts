@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     sql += ' ORDER BY e.created_at DESC LIMIT ?';
     params.push(limit);
 
-    const events = queryAll<Event & { agent_name?: string; agent_emoji?: string; task_title?: string }>(sql, params);
+    const events = await queryAll<Event & { agent_name?: string; agent_emoji?: string; task_title?: string }>(sql, params);
 
     // Transform to include nested info
     const transformedEvents = events.map((event) => ({
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const id = uuidv4();
     const now = new Date().toISOString();
 
-    run(
+    await run(
       `INSERT INTO events (id, type, agent_id, task_id, message, metadata, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [

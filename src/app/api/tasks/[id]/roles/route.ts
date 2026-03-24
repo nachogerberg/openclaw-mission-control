@@ -18,7 +18,7 @@ export async function GET(
   const { id: taskId } = await params;
 
   try {
-    const roles = queryAll<{
+    const roles = await queryAll<{
       id: string; task_id: string; role: string; agent_id: string;
       created_at: string; agent_name: string; agent_emoji: string;
     }>(
@@ -59,7 +59,7 @@ export async function PUT(
       );
     }
 
-    const task = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [taskId]);
+    const task = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [taskId]);
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
@@ -98,7 +98,7 @@ export async function PUT(
     })();
 
     // Fetch and return updated roles
-    const updatedRoles = queryAll(
+    const updatedRoles = await queryAll(
       `SELECT tr.*, a.name as agent_name, a.avatar_emoji as agent_emoji
        FROM task_roles tr
        JOIN agents a ON tr.agent_id = a.id
@@ -108,7 +108,7 @@ export async function PUT(
     );
 
     // Broadcast task update
-    const updatedTask = queryOne<Task>(
+    const updatedTask = await queryOne<Task>(
       `SELECT t.*, aa.name as assigned_agent_name, aa.avatar_emoji as assigned_agent_emoji
        FROM tasks t LEFT JOIN agents aa ON t.assigned_agent_id = aa.id WHERE t.id = ?`,
       [taskId]

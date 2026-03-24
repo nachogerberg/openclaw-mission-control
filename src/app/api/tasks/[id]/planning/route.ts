@@ -97,12 +97,12 @@ export async function POST(
 
     // Check if there are other orchestrators available before starting planning with the default master agent
     // Get the default master agent for this workspace
-    const defaultMaster = queryOne<{ id: string; session_key_prefix?: string }>(
+    const defaultMaster = await queryOne<{ id: string; session_key_prefix?: string }>(
       `SELECT id, session_key_prefix FROM agents WHERE is_master = 1 AND workspace_id = ? ORDER BY created_at ASC LIMIT 1`,
       [task.workspace_id]
     );
 
-    const otherOrchestrators = queryAll<{
+    const otherOrchestrators = await queryAll<{
       id: string;
       name: string;
       role: string;
@@ -198,7 +198,7 @@ export async function DELETE(
 
   try {
     // Get task to check session key
-    const task = queryOne<{
+    const task = await queryOne<{
       id: string;
       planning_session_key?: string;
       status: string;
@@ -212,7 +212,7 @@ export async function DELETE(
     }
 
     // Clear planning-related fields
-    run(`
+    await run(`
       UPDATE tasks
       SET planning_session_key = NULL,
           planning_messages = NULL,
@@ -225,7 +225,7 @@ export async function DELETE(
     `, [taskId]);
 
     // Broadcast task update
-    const updatedTask = queryOne('SELECT * FROM tasks WHERE id = ?', [taskId]);
+    const updatedTask = await queryOne('SELECT * FROM tasks WHERE id = ?', [taskId]);
     if (updatedTask) {
       broadcast({
         type: 'task_updated',

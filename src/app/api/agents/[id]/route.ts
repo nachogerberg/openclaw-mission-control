@@ -11,7 +11,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const agent = queryOne<Agent>('SELECT * FROM agents WHERE id = ?', [id]);
+    const agent = await queryOne<Agent>('SELECT * FROM agents WHERE id = ?', [id]);
 
     if (!agent) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
@@ -33,7 +33,7 @@ export async function PATCH(
     const { id } = await params;
     const body: UpdateAgentRequest = await request.json();
 
-    const existing = queryOne<Agent>('SELECT * FROM agents WHERE id = ?', [id]);
+    const existing = await queryOne<Agent>('SELECT * FROM agents WHERE id = ?', [id]);
     if (!existing) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
     }
@@ -63,7 +63,7 @@ export async function PATCH(
 
       // Log status change event
       const now = new Date().toISOString();
-      run(
+      await run(
         `INSERT INTO events (id, type, agent_id, message, created_at)
          VALUES (?, ?, ?, ?, ?)`,
         [uuidv4(), 'agent_status_changed', id, `${existing.name} is now ${body.status}`, now]
@@ -98,9 +98,9 @@ export async function PATCH(
     values.push(new Date().toISOString());
     values.push(id);
 
-    run(`UPDATE agents SET ${updates.join(', ')} WHERE id = ?`, values);
+    await run(`UPDATE agents SET ${updates.join(', ')} WHERE id = ?`, values);
 
-    const agent = queryOne<Agent>('SELECT * FROM agents WHERE id = ?', [id]);
+    const agent = await queryOne<Agent>('SELECT * FROM agents WHERE id = ?', [id]);
     return NextResponse.json(agent);
   } catch (error) {
     console.error('Failed to update agent:', error);
@@ -115,23 +115,23 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const existing = queryOne<Agent>('SELECT * FROM agents WHERE id = ?', [id]);
+    const existing = await queryOne<Agent>('SELECT * FROM agents WHERE id = ?', [id]);
 
     if (!existing) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
     }
 
     // Delete or nullify related records first (foreign key constraints)
-    run('DELETE FROM openclaw_sessions WHERE agent_id = ?', [id]);
-    run('DELETE FROM events WHERE agent_id = ?', [id]);
-    run('DELETE FROM messages WHERE sender_agent_id = ?', [id]);
-    run('DELETE FROM conversation_participants WHERE agent_id = ?', [id]);
-    run('UPDATE tasks SET assigned_agent_id = NULL WHERE assigned_agent_id = ?', [id]);
-    run('UPDATE tasks SET created_by_agent_id = NULL WHERE created_by_agent_id = ?', [id]);
-    run('UPDATE task_activities SET agent_id = NULL WHERE agent_id = ?', [id]);
+    await run('DELETE FROM openclaw_sessions WHERE agent_id = ?', [id]);
+    await run('DELETE FROM events WHERE agent_id = ?', [id]);
+    await run('DELETE FROM messages WHERE sender_agent_id = ?', [id]);
+    await run('DELETE FROM conversation_participants WHERE agent_id = ?', [id]);
+    await run('UPDATE tasks SET assigned_agent_id = NULL WHERE assigned_agent_id = ?', [id]);
+    await run('UPDATE tasks SET created_by_agent_id = NULL WHERE created_by_agent_id = ?', [id]);
+    await run('UPDATE task_activities SET agent_id = NULL WHERE agent_id = ?', [id]);
 
     // Now delete the agent
-    run('DELETE FROM agents WHERE id = ?', [id]);
+    await run('DELETE FROM agents WHERE id = ?', [id]);
 
     return NextResponse.json({ success: true });
   } catch (error) {

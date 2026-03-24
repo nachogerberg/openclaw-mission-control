@@ -82,13 +82,13 @@ async function handlePlanningCompletion(taskId: string, parsed: any, messages: a
 
   // Re-check for other orchestrators before dispatching
   if (firstAgentId) {
-    const task = queryOne<{ workspace_id: string }>('SELECT workspace_id FROM tasks WHERE id = ?', [taskId]);
+    const task = await queryOne<{ workspace_id: string }>('SELECT workspace_id FROM tasks WHERE id = ?', [taskId]);
     if (task) {
-      const defaultMaster = queryOne<{ id: string }>(
+      const defaultMaster = await queryOne<{ id: string }>(
         `SELECT id FROM agents WHERE is_master = 1 AND workspace_id = ? ORDER BY created_at ASC LIMIT 1`,
         [task.workspace_id]
       );
-      const otherOrchestrators = queryAll<{ id: string; name: string }>(
+      const otherOrchestrators = await queryAll<{ id: string; name: string }>(
         `SELECT id, name FROM agents WHERE is_master = 1 AND id != ? AND workspace_id = ? AND status != 'offline'`,
         [defaultMaster?.id ?? '', task.workspace_id]
       );
@@ -106,10 +106,10 @@ async function handlePlanningCompletion(taskId: string, parsed: any, messages: a
   // silently lost (e.g. broken WebSocket) and MUST be retried.
   let skipDispatch = false;
   if (firstAgentId) {
-    const currentTask = queryOne<{ status: string; updated_at: string }>('SELECT status, updated_at FROM tasks WHERE id = ?', [taskId]);
+    const currentTask = await queryOne<{ status: string; updated_at: string }>('SELECT status, updated_at FROM tasks WHERE id = ?', [taskId]);
     if (currentTask?.status === 'in_progress') {
       // Check for any agent activity since dispatch — if none, allow re-dispatch
-      const recentActivity = queryOne<{ cnt: number }>(
+      const recentActivity = await queryOne<{ cnt: number }>(
         `SELECT COUNT(*) as cnt FROM task_activities WHERE task_id = ? AND created_at > datetime('now', '-2 minutes')`,
         [taskId]
       );
@@ -119,7 +119,7 @@ async function handlePlanningCompletion(taskId: string, parsed: any, messages: a
       } else {
         console.log('[Planning Poll] Task in_progress but no recent agent activity — retrying dispatch (likely lost message)');
         // Reset to assigned so dispatch can proceed cleanly
-        run('UPDATE tasks SET status = ?, updated_at = datetime(\'now\') WHERE id = ?', ['assigned', taskId]);
+        await run('UPDATE tasks SET status = ?, updated_at = datetime(\'now\') WHERE id = ?', ['assigned', taskId]);
       }
     }
   }
@@ -157,21 +157,21 @@ async function handlePlanningCompletion(taskId: string, parsed: any, messages: a
   // On dispatch failure: keep planning data intact, just record the error.
   // Task stays in 'assigned' so user can retry dispatch without re-planning.
   if (dispatchError) {
-    run(
+    await run(
       `UPDATE tasks SET planning_dispatch_error = ?, status_reason = ?, updated_at = datetime('now') WHERE id = ?`,
       [dispatchError, 'Dispatch failed: ' + dispatchError, taskId]
     );
     console.log(`[Planning Poll] Dispatch failed for task ${taskId}, planning data preserved: ${dispatchError}`);
   } else if (!firstAgentId) {
     // No agent created — move to inbox for manual assignment
-    run(
+    await run(
       `UPDATE tasks SET status = 'inbox', planning_dispatch_error = NULL, updated_at = datetime('now') WHERE id = ?`,
       [taskId]
     );
   }
 
   // Broadcast task update
-  const updatedTask = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [taskId]);
+  const updatedTask = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [taskId]);
   if (updatedTask) {
     broadcast({ type: 'task_updated', payload: updatedTask });
   }
@@ -187,7 +187,7 @@ export async function GET(
   const { id: taskId } = await params;
 
   try {
-    const task = queryOne<{
+    const task = await queryOne<{
       id: string;
       planning_session_key?: string;
       planning_messages?: string;
@@ -297,7 +297,7 @@ export async function GET(
       console.log('[Planning Poll] Returning updates: currentQuestion =', currentQuestion ? 'YES' : 'NO');
 
       // Update database
-      run('UPDATE tasks SET planning_messages = ? WHERE id = ?', [JSON.stringify(messages), taskId]);
+      await run('UPDATE tasks SET planning_messages = ? WHERE id = ?', [JSON.stringify(messages), taskId]);
 
       return NextResponse.json({
         hasUpdates: true,

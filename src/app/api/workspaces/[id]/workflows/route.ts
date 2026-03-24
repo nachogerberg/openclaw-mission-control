@@ -14,7 +14,7 @@ export async function GET(
   const { id: workspaceId } = await params;
 
   try {
-    const templates = queryAll<{
+    const templates = await queryAll<{
       id: string; workspace_id: string; name: string; description: string;
       stages: string; fail_targets: string; is_default: number;
       created_at: string; updated_at: string;
@@ -65,19 +65,19 @@ export async function POST(
 
     // If this is the default, unset other defaults in the workspace
     if (is_default) {
-      run(
+      await run(
         'UPDATE workflow_templates SET is_default = 0 WHERE workspace_id = ?',
         [workspaceId]
       );
     }
 
-    run(
+    await run(
       `INSERT INTO workflow_templates (id, workspace_id, name, description, stages, fail_targets, is_default, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, workspaceId, name, description || null, JSON.stringify(stages), JSON.stringify(fail_targets || {}), is_default ? 1 : 0, now, now]
     );
 
-    const template = queryOne(
+    const template = await queryOne(
       'SELECT * FROM workflow_templates WHERE id = ?',
       [id]
     );

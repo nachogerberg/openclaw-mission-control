@@ -28,7 +28,7 @@ export async function POST(
       return NextResponse.json({ error: 'reason is required' }, { status: 400 });
     }
 
-    const task = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [taskId]);
+    const task = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [taskId]);
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }

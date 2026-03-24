@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- **Task image rendering lint warning** — Replaced raw `<img>` usage in `TaskImages` with `next/image` (`unoptimized`) so production builds stay clean while preserving local API-served task attachments.
+
 ## [1.5.3] - 2026-03-13
 
 ### Fixed

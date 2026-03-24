@@ -1,66 +1,123 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
-import { schema } from './schema';
-import { runMigrations } from './migrations';
-import { ensureCatalogSyncScheduled } from '@/lib/agent-catalog-sync';
+/**
+ * Database adapter for Mission Control
+ *
+ * - Local dev: SQLite via better-sqlite3 (synchronous)
+ * - Vercel/Production: Postgres via pg (async) with oc_ table prefix
+ *
+ * All exported helpers (queryAll, queryOne, run, transaction) return Promises
+ * so callers must `await` them. On SQLite the Promise resolves immediately.
+ */
 
-const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), 'mission-control.db');
+const USE_POSTGRES = !!process.env.SUPABASE_DATABASE_URL;
 
-let db: Database.Database | null = null;
+// ──────────────────────────────────────────────────
+// Postgres path (Vercel)
+// ──────────────────────────────────────────────────
+let pgMod: typeof import('./postgres') | null = null;
 
-export function getDb(): Database.Database {
-  if (!db) {
-    const isNewDb = !fs.existsSync(DB_PATH);
-    
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
+async function pg() {
+  if (!pgMod) {
+    pgMod = await import('./postgres');
+  }
+  return pgMod;
+}
 
-    // Initialize base schema (creates tables if they don't exist)
-    db.exec(schema);
+// ──────────────────────────────────────────────────
+// SQLite path (local dev)
+// ──────────────────────────────────────────────────
+let sqliteDb: import('better-sqlite3').Database | null = null;
 
-    // Run migrations for schema updates
-    // This handles both new and existing databases
-    runMigrations(db);
+/* eslint-disable @typescript-eslint/no-require-imports */
+function getSqliteDb(): import('better-sqlite3').Database {
+  if (!sqliteDb) {
+    const Database = require('better-sqlite3');
+    const path = require('path');
+    const fs = require('fs');
 
-    // Keep Mission Control's agent catalog synced with OpenClaw-installed agents
+    const dbPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'mission-control.db');
+    const isNew = !fs.existsSync(dbPath);
+
+    sqliteDb = new Database(dbPath);
+    sqliteDb!.pragma('journal_mode = WAL');
+    sqliteDb!.pragma('foreign_keys = ON');
+
+    const { schema } = require('./schema');
+    sqliteDb!.exec(schema);
+
+    const { runMigrations } = require('./migrations');
+    runMigrations(sqliteDb);
+
+    const { ensureCatalogSyncScheduled } = require('@/lib/agent-catalog-sync');
     ensureCatalogSyncScheduled();
-    
-    if (isNewDb) {
-      console.log('[DB] New database created at:', DB_PATH);
-    }
-  }
-  return db;
-}
 
-export function closeDb(): void {
-  if (db) {
-    db.close();
-    db = null;
+    if (isNew) console.log('[DB] New SQLite database created at:', dbPath);
   }
+  return sqliteDb!;
 }
+/* eslint-enable @typescript-eslint/no-require-imports */
 
-// Type-safe query helpers
-export function queryAll<T>(sql: string, params: unknown[] = []): T[] {
-  const stmt = getDb().prepare(sql);
+// ──────────────────────────────────────────────────
+// Public API — always async (Promise-based)
+// ──────────────────────────────────────────────────
+
+export async function queryAll<T>(sql: string, params: unknown[] = []): Promise<T[]> {
+  if (USE_POSTGRES) {
+    const m = await pg();
+    return m.pgQueryAll<T>(sql, params);
+  }
+  const stmt = getSqliteDb().prepare(sql);
   return stmt.all(...params) as T[];
 }
 
-export function queryOne<T>(sql: string, params: unknown[] = []): T | undefined {
-  const stmt = getDb().prepare(sql);
+export async function queryOne<T>(sql: string, params: unknown[] = []): Promise<T | undefined> {
+  if (USE_POSTGRES) {
+    const m = await pg();
+    return m.pgQueryOne<T>(sql, params);
+  }
+  const stmt = getSqliteDb().prepare(sql);
   return stmt.get(...params) as T | undefined;
 }
 
-export function run(sql: string, params: unknown[] = []): Database.RunResult {
-  const stmt = getDb().prepare(sql);
+export async function run(sql: string, params: unknown[] = []): Promise<{ changes: number; lastInsertRowid: number | bigint }> {
+  if (USE_POSTGRES) {
+    const m = await pg();
+    return m.pgRun(sql, params);
+  }
+  const stmt = getSqliteDb().prepare(sql);
   return stmt.run(...params);
 }
 
-export function transaction<T>(fn: () => T): T {
-  const db = getDb();
-  return db.transaction(fn)();
+export async function transaction<T>(fn: () => T | Promise<T>): Promise<T> {
+  if (USE_POSTGRES) {
+    const m = await pg();
+    return m.pgTransaction(fn as () => Promise<T>);
+  }
+  const db = getSqliteDb();
+  return db.transaction(fn as () => T)();
 }
 
-// Export migration utilities for CLI use
+/**
+ * getDb() — returns the raw SQLite database object.
+ * On Postgres, returns a proxy that logs warnings for direct .prepare() calls.
+ * Callers that use getDb() directly should be migrated to use the async helpers.
+ */
+export function getDb(): any {
+  if (USE_POSTGRES) {
+    // Return a proxy that provides async-compatible methods
+    // This is a compatibility shim — direct getDb() usage should be minimized
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pgMod = require('./postgres');
+    return pgMod.createPgDbProxy();
+  }
+  return getSqliteDb();
+}
+
+export function closeDb(): void {
+  if (sqliteDb) {
+    sqliteDb.close();
+    sqliteDb = null;
+  }
+}
+
+// Export migration utilities for CLI use (SQLite only)
 export { runMigrations, getMigrationStatus } from './migrations';

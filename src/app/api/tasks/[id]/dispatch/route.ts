@@ -31,7 +31,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     // Get task with agent info
-    const task = queryOne<Task & { assigned_agent_name?: string; workspace_id: string }>(
+    const task = await queryOne<Task & { assigned_agent_name?: string; workspace_id: string }>(
       `SELECT t.*, a.name as assigned_agent_name, a.is_master
        FROM tasks t
        LEFT JOIN agents a ON t.assigned_agent_id = a.id
@@ -52,10 +52,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         review: 'reviewer',
         verification: 'reviewer',
       };
-      const dynamicAgent = pickDynamicAgent(id, statusRoleMap[task.status] || 'builder');
+      const dynamicAgent = await pickDynamicAgent(id, statusRoleMap[task.status] || 'builder');
       if (dynamicAgent) {
         assignedAgentId = dynamicAgent.id;
-        run('UPDATE tasks SET assigned_agent_id = ?, updated_at = datetime(\'now\') WHERE id = ?', [assignedAgentId, id]);
+        await run('UPDATE tasks SET assigned_agent_id = ?, updated_at = datetime(\'now\') WHERE id = ?', [assignedAgentId, id]);
       }
     }
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get agent details
-    const agent = queryOne<Agent>(
+    const agent = await queryOne<Agent>(
       'SELECT * FROM agents WHERE id = ?',
       [assignedAgentId]
     );
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Check if dispatching to the master agent while there are other orchestrators available
     if (agent.is_master) {
       // Check for other master agents in the same workspace (excluding this one)
-      const otherOrchestrators = queryAll<{
+      const otherOrchestrators = await queryAll<{
         id: string;
         name: string;
         role: string;
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get or create OpenClaw session for this agent
-    let session = queryOne<OpenClawSession>(
+    let session = await queryOne<OpenClawSession>(
       'SELECT * FROM openclaw_sessions WHERE agent_id = ? AND status = ?',
       [agent.id, 'active']
     );
@@ -130,19 +130,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       const sessionId = uuidv4();
       const openclawSessionId = `mission-control-${agent.name.toLowerCase().replace(/\s+/g, '-')}`;
       
-      run(
+      await run(
         `INSERT INTO openclaw_sessions (id, agent_id, openclaw_session_id, channel, status, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [sessionId, agent.id, openclawSessionId, 'mission-control', 'active', now, now]
       );
 
-      session = queryOne<OpenClawSession>(
+      session = await queryOne<OpenClawSession>(
         'SELECT * FROM openclaw_sessions WHERE id = ?',
         [sessionId]
       );
 
       // Log session creation
-      run(
+      await run(
         `INSERT INTO events (id, type, agent_id, message, created_at)
          VALUES (?, ?, ?, ?, ?)`,
         [uuidv4(), 'agent_status_changed', agent.id, `${agent.name} session created`, now]
@@ -219,14 +219,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Inject relevant knowledge from the learner knowledge base
     let knowledgeSection = '';
     try {
-      const knowledge = getRelevantKnowledge(task.workspace_id, task.title);
+      const knowledge = await getRelevantKnowledge(task.workspace_id, task.title);
       knowledgeSection = formatKnowledgeForDispatch(knowledge);
     } catch {
       // Knowledge injection is best-effort
     }
 
     // Determine role-specific instructions based on workflow template
-    const workflow = getTaskWorkflow(id);
+    const workflow = await getTaskWorkflow(id);
     let currentStage: WorkflowStage | undefined;
     let nextStage: WorkflowStage | undefined;
     if (workflow) {
@@ -343,14 +343,14 @@ If you need help or clarification, ask the orchestrator.`;
       // Only move to in_progress for builder dispatch (task is in 'assigned' status)
       // For tester/reviewer/verifier, the task status is already correct
       if (task.status === 'assigned') {
-        run(
+        await run(
           'UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?',
           ['in_progress', now, id]
         );
       }
 
       // Broadcast task update
-      const updatedTask = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
+      const updatedTask = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
       if (updatedTask) {
         broadcast({
           type: 'task_updated',
@@ -359,14 +359,14 @@ If you need help or clarification, ask the orchestrator.`;
       }
 
       // Update agent status to working
-      run(
+      await run(
         'UPDATE agents SET status = ?, updated_at = ? WHERE id = ?',
         ['working', now, agent.id]
       );
 
       // Log dispatch event to events table
       const eventId = uuidv4();
-      run(
+      await run(
         `INSERT INTO events (id, type, agent_id, task_id, message, created_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [eventId, 'task_dispatched', agent.id, task.id, `Task "${task.title}" dispatched to ${agent.name}`, now]
@@ -374,7 +374,7 @@ If you need help or clarification, ask the orchestrator.`;
 
       // Log dispatch activity to task_activities table (for Activity tab)
       const activityId = crypto.randomUUID();
-      run(
+      await run(
         `INSERT INTO task_activities (id, task_id, agent_id, activity_type, message, created_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [activityId, task.id, agent.id, 'status_changed', `Task dispatched to ${agent.name} - Agent is now working on this task`, now]
@@ -390,11 +390,11 @@ If you need help or clarification, ask the orchestrator.`;
     } catch (err) {
       console.error('Failed to send message to agent:', err);
       // Reset task to 'assigned' so dispatch can be retried
-      run(
+      await run(
         `UPDATE tasks SET status = 'assigned', planning_dispatch_error = ?, updated_at = datetime('now') WHERE id = ? AND status != 'done'`,
         [`Dispatch delivery failed: ${(err as Error).message}`, id]
       );
-      const failedTask = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
+      const failedTask = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
       if (failedTask) {
         broadcast({ type: 'task_updated', payload: failedTask });
       }

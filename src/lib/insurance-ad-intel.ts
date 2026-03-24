@@ -10,6 +10,7 @@ export interface InsuranceAdIntelRecord {
   page_name: string;
   page_id?: string | null;
   ad_snapshot_url?: string | null;
+  ad_library_url?: string | null;
   destination_url?: string | null;
   media_url?: string | null;
   media_type: AdMediaType;
@@ -59,6 +60,31 @@ export function tokenize(text?: string | null): string[] {
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter(Boolean);
+}
+
+export function buildMetaAdLibraryUrl(input: {
+  ad_snapshot_url?: string | null;
+  keyword?: string | null;
+  region?: string | null;
+  page_id?: string | null;
+  id?: string | null;
+}) {
+  const snapshot = input.ad_snapshot_url || '';
+  const idMatch = snapshot.match(/[?&]id=(\d+)/i) || String(input.id || '').match(/(\d{6,})/);
+  if (idMatch?.[1]) {
+    return `https://www.facebook.com/ads/library/?id=${idMatch[1]}`;
+  }
+
+  const params = new URLSearchParams({
+    active_status: 'all',
+    ad_type: 'all',
+    country: input.region === 'PR' ? 'US' : 'US',
+    media_type: 'all',
+    search_type: 'keyword_unordered',
+    q: input.keyword || '',
+  });
+
+  return `https://www.facebook.com/ads/library/?${params.toString()}`;
 }
 
 export function scoreInsuranceAdIntel(input: {

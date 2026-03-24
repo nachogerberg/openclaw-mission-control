@@ -29,7 +29,7 @@ export async function GET(
     sql += ' ORDER BY confidence DESC, created_at DESC LIMIT ?';
     sqlParams.push(limit);
 
-    const entries = queryAll<{
+    const entries = await queryAll<{
       id: string; workspace_id: string; task_id: string; category: string;
       title: string; content: string; tags: string; confidence: number;
       created_by_agent_id: string; created_at: string;
@@ -70,7 +70,7 @@ export async function POST(
 
     const id = crypto.randomUUID();
 
-    run(
+    await run(
       `INSERT INTO knowledge_entries (id, workspace_id, task_id, category, title, content, tags, confidence, created_by_agent_id, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
       [

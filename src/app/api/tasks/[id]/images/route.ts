@@ -37,7 +37,7 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const task = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
+  const task = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
   if (!task) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
@@ -55,7 +55,7 @@ export async function POST(
 ) {
   const { id } = await params;
 
-  const task = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
+  const task = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
   if (!task) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
@@ -108,7 +108,7 @@ export async function POST(
   images.push(newImage);
 
   const now = new Date().toISOString();
-  run(
+  await run(
     'UPDATE tasks SET images = ?, updated_at = ? WHERE id = ?',
     [JSON.stringify(images), now, id]
   );
@@ -127,7 +127,7 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
-  const task = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
+  const task = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [id]);
   if (!task) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });
   }
@@ -139,7 +139,7 @@ export async function DELETE(
 
   const images = getTaskImages(task).filter(img => img.filename !== body.filename);
   const now = new Date().toISOString();
-  run(
+  await run(
     'UPDATE tasks SET images = ?, updated_at = ? WHERE id = ?',
     [JSON.stringify(images), now, id]
   );

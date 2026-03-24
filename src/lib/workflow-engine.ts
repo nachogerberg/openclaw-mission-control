@@ -22,8 +22,8 @@ interface StageTransitionResult {
 /**
  * Get the workflow template for a task (via task.workflow_template_id or workspace default)
  */
-export function getTaskWorkflow(taskId: string): WorkflowTemplate | null {
-  const task = queryOne<{ workflow_template_id?: string; workspace_id: string }>(
+export async function getTaskWorkflow(taskId: string): Promise<WorkflowTemplate | null> {
+  const task = await queryOne<{ workflow_template_id?: string; workspace_id: string }>(
     'SELECT workflow_template_id, workspace_id FROM tasks WHERE id = ?',
     [taskId]
   );
@@ -31,7 +31,7 @@ export function getTaskWorkflow(taskId: string): WorkflowTemplate | null {
 
   // Try task-specific template first
   if (task.workflow_template_id) {
-    const tpl = queryOne<{ id: string; workspace_id: string; name: string; description: string; stages: string; fail_targets: string; is_default: number; created_at: string; updated_at: string }>(
+    const tpl = await queryOne<{ id: string; workspace_id: string; name: string; description: string; stages: string; fail_targets: string; is_default: number; created_at: string; updated_at: string }>(
       'SELECT * FROM workflow_templates WHERE id = ?',
       [task.workflow_template_id]
     );
@@ -39,14 +39,14 @@ export function getTaskWorkflow(taskId: string): WorkflowTemplate | null {
   }
 
   // Fall back to workspace default
-  const tpl = queryOne<{ id: string; workspace_id: string; name: string; description: string; stages: string; fail_targets: string; is_default: number; created_at: string; updated_at: string }>(
+  const tpl = await queryOne<{ id: string; workspace_id: string; name: string; description: string; stages: string; fail_targets: string; is_default: number; created_at: string; updated_at: string }>(
     'SELECT * FROM workflow_templates WHERE workspace_id = ? AND is_default = 1 LIMIT 1',
     [task.workspace_id]
   );
   if (tpl) return parseTemplate(tpl);
 
   // Fall back to global default
-  const globalTpl = queryOne<{ id: string; workspace_id: string; name: string; description: string; stages: string; fail_targets: string; is_default: number; created_at: string; updated_at: string }>(
+  const globalTpl = await queryOne<{ id: string; workspace_id: string; name: string; description: string; stages: string; fail_targets: string; is_default: number; created_at: string; updated_at: string }>(
     "SELECT * FROM workflow_templates WHERE is_default = 1 ORDER BY created_at ASC LIMIT 1"
   );
   return globalTpl ? parseTemplate(globalTpl) : null;
@@ -64,8 +64,8 @@ function parseTemplate(row: { id: string; workspace_id: string; name: string; de
 /**
  * Get all role assignments for a task
  */
-export function getTaskRoles(taskId: string): TaskRole[] {
-  return queryAll<TaskRole>(
+export async function getTaskRoles(taskId: string): Promise<TaskRole[]> {
+  return await queryAll<TaskRole>(
     `SELECT tr.*, a.name as agent_name, a.avatar_emoji
      FROM task_roles tr
      LEFT JOIN agents a ON tr.agent_id = a.id
@@ -77,8 +77,8 @@ export function getTaskRoles(taskId: string): TaskRole[] {
 /**
  * Find the agent assigned to a specific role on a task
  */
-function getAgentForRole(taskId: string, role: string): { id: string; name: string } | null {
-  const result = queryOne<{ agent_id: string; agent_name: string }>(
+async function getAgentForRole(taskId: string, role: string): Promise<{ id: string; name: string } | null> {
+  const result = await queryOne<{ agent_id: string; agent_name: string }>(
     `SELECT tr.agent_id, a.name as agent_name
      FROM task_roles tr
      JOIN agents a ON tr.agent_id = a.id
@@ -106,7 +106,7 @@ export async function handleStageTransition(
     skipDispatch?: boolean;
   }
 ): Promise<StageTransitionResult> {
-  const workflow = getTaskWorkflow(taskId);
+  const workflow = await getTaskWorkflow(taskId);
   if (!workflow) {
     // No workflow template — fall back to legacy single-agent behavior
     return { success: true, handedOff: false };
@@ -123,7 +123,7 @@ export async function handleStageTransition(
     if (targetStage.status !== 'done') {
       // Queue stage (no role, not done) — park the task here, then try to drain
       console.log(`[Workflow] Task ${taskId} entered queue stage "${targetStage.label}"`);
-      const task = queryOne<{ workspace_id: string }>('SELECT workspace_id FROM tasks WHERE id = ?', [taskId]);
+      const task = await queryOne<{ workspace_id: string }>('SELECT workspace_id FROM tasks WHERE id = ?', [taskId]);
       if (task) {
         // Non-blocking drain attempt — picks up immediately if next stage is free
         drainQueue(taskId, task.workspace_id, workflow).catch(err =>
@@ -135,15 +135,15 @@ export async function handleStageTransition(
   }
 
   // Find the agent assigned to this role (task_roles first, then fall back to assigned_agent_id)
-  let roleAgent = getAgentForRole(taskId, targetStage.role);
+  let roleAgent = await getAgentForRole(taskId, targetStage.role);
   if (!roleAgent) {
     // Fall back to the task's directly assigned agent
-    const task = queryOne<{ assigned_agent_id: string | null }>(
+    const task = await queryOne<{ assigned_agent_id: string | null }>(
       'SELECT assigned_agent_id FROM tasks WHERE id = ?',
       [taskId]
     );
     if (task?.assigned_agent_id) {
-      const agent = queryOne<{ id: string; name: string }>(
+      const agent = await queryOne<{ id: string; name: string }>(
         'SELECT id, name FROM agents WHERE id = ?',
         [task.assigned_agent_id]
       );
@@ -155,12 +155,12 @@ export async function handleStageTransition(
   }
   if (!roleAgent) {
     // Dynamic routing fallback (planner+rules) when explicit role assignment is missing
-    roleAgent = pickDynamicAgent(taskId, targetStage.role);
+    roleAgent = await pickDynamicAgent(taskId, targetStage.role);
   }
 
   if (!roleAgent) {
     const errorMsg = `No eligible agent found for stage role: ${targetStage.role}.`;
-    run(
+    await run(
       'UPDATE tasks SET planning_dispatch_error = ?, updated_at = datetime(\'now\') WHERE id = ?',
       [errorMsg, taskId]
     );
@@ -169,17 +169,17 @@ export async function handleStageTransition(
   }
 
   // Reset previous agent to standby (if different from new agent and not working on other tasks)
-  const previousTask = queryOne<{ assigned_agent_id: string | null }>(
+  const previousTask = await queryOne<{ assigned_agent_id: string | null }>(
     'SELECT assigned_agent_id FROM tasks WHERE id = ?',
     [taskId]
   );
   if (previousTask?.assigned_agent_id && previousTask.assigned_agent_id !== roleAgent.id) {
-    const otherActiveTasks = queryOne<{ cnt: number }>(
+    const otherActiveTasks = await queryOne<{ cnt: number }>(
       `SELECT COUNT(*) as cnt FROM tasks WHERE assigned_agent_id = ? AND id != ? AND status IN ('assigned', 'in_progress', 'testing', 'verification')`,
       [previousTask.assigned_agent_id, taskId]
     );
     if (!otherActiveTasks || otherActiveTasks.cnt === 0) {
-      run(
+      await run(
         `UPDATE agents SET status = 'standby', updated_at = datetime('now') WHERE id = ? AND status = 'working'`,
         [previousTask.assigned_agent_id]
       );
@@ -188,13 +188,13 @@ export async function handleStageTransition(
 
   // Assign agent to task
   const now = new Date().toISOString();
-  run(
+  await run(
     'UPDATE tasks SET assigned_agent_id = ?, planning_dispatch_error = NULL, updated_at = ? WHERE id = ?',
     [roleAgent.id, now, taskId]
   );
 
   // Log the handoff
-  run(
+  await run(
     `INSERT INTO task_activities (id, task_id, agent_id, activity_type, message, created_at)
      VALUES (?, ?, ?, 'status_changed', ?, ?)`,
     [
@@ -229,7 +229,7 @@ export async function handleStageTransition(
       const errorText = await dispatchRes.text();
       const error = `Auto-dispatch to ${roleAgent.name} failed (${dispatchRes.status}): ${errorText}`;
       console.error(`[Workflow] ${error}`);
-      run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [error, now, taskId]);
+      await run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [error, now, taskId]);
       return { success: false, handedOff: true, newAgentId: roleAgent.id, newAgentName: roleAgent.name, error };
     }
 
@@ -238,7 +238,7 @@ export async function handleStageTransition(
   } catch (err) {
     const error = `Dispatch error: ${(err as Error).message}`;
     console.error(`[Workflow] ${error}`);
-    run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [error, now, taskId]);
+    await run('UPDATE tasks SET planning_dispatch_error = ?, updated_at = ? WHERE id = ?', [error, now, taskId]);
     return { success: false, handedOff: true, newAgentId: roleAgent.id, newAgentName: roleAgent.name, error };
   }
 }
@@ -252,7 +252,7 @@ export async function handleStageFailure(
   currentStatus: string,
   failReason: string
 ): Promise<StageTransitionResult> {
-  const workflow = getTaskWorkflow(taskId);
+  const workflow = await getTaskWorkflow(taskId);
   if (!workflow) {
     return { success: false, handedOff: false, error: 'No workflow template' };
   }
@@ -265,20 +265,20 @@ export async function handleStageFailure(
   const now = new Date().toISOString();
 
   // Log the failure
-  run(
+  await run(
     `INSERT INTO task_activities (id, task_id, activity_type, message, created_at)
      VALUES (?, ?, 'status_changed', ?, ?)`,
     [crypto.randomUUID(), taskId, `Stage failed: ${currentStatus} → ${targetStatus} (reason: ${failReason})`, now]
   );
 
   // Update task status to the fail target
-  run(
+  await run(
     'UPDATE tasks SET status = ?, status_reason = ?, updated_at = ? WHERE id = ?',
     [targetStatus, `Failed: ${failReason}`, now, taskId]
   );
 
   // Broadcast update
-  const updatedTask = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [taskId]);
+  const updatedTask = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [taskId]);
   if (updatedTask) {
     broadcast({ type: 'task_updated', payload: updatedTask });
   }
@@ -297,15 +297,15 @@ export async function handleStageFailure(
  * Auto-populate task_roles from planning agents when a workflow template is assigned.
  * Maps agent roles to workflow stage roles using fuzzy matching.
  */
-export function populateTaskRolesFromAgents(taskId: string, workspaceId: string): void {
-  const workflow = getTaskWorkflow(taskId);
+export async function populateTaskRolesFromAgents(taskId: string, workspaceId: string): Promise<void> {
+  const workflow = await getTaskWorkflow(taskId);
   if (!workflow) return;
 
-  const existingRoles = getTaskRoles(taskId);
+  const existingRoles = await getTaskRoles(taskId);
   if (existingRoles.length > 0) return; // Already populated
 
   // Get all agents in the workspace
-  const agents = queryAll<{ id: string; name: string; role: string }>(
+  const agents = await queryAll<{ id: string; name: string; role: string }>(
     "SELECT id, name, role FROM agents WHERE workspace_id = ? AND status != 'offline'",
     [workspaceId]
   );
@@ -341,7 +341,7 @@ export function populateTaskRolesFromAgents(taskId: string, workspaceId: string)
 
   // Insert role assignments
   for (const [role, agentId] of Object.entries(roleMap)) {
-    run(
+    await run(
       `INSERT OR IGNORE INTO task_roles (id, task_id, role, agent_id, created_at)
        VALUES (?, ?, ?, ?, datetime('now'))`,
       [crypto.randomUUID(), taskId, role, agentId]
@@ -369,7 +369,7 @@ export async function drainQueue(
 ): Promise<void> {
   if (!workflow) {
     // Try to resolve from the triggering task
-    workflow = getTaskWorkflow(triggeringTaskId);
+    workflow = await getTaskWorkflow(triggeringTaskId);
   }
   if (!workflow) return;
 
@@ -382,7 +382,7 @@ export async function drainQueue(
     if (!nextStage || nextStage.status === 'done') continue;
 
     // Check if ANY task in this workspace is currently in the next stage
-    const occupant = queryOne<{ id: string }>(
+    const occupant = await queryOne<{ id: string }>(
       'SELECT id FROM tasks WHERE workspace_id = ? AND status = ? LIMIT 1',
       [workspaceId, nextStage.status]
     );
@@ -392,7 +392,7 @@ export async function drainQueue(
     }
 
     // Find the oldest task sitting in this queue stage
-    const oldest = queryOne<{ id: string }>(
+    const oldest = await queryOne<{ id: string }>(
       'SELECT id FROM tasks WHERE workspace_id = ? AND status = ? ORDER BY updated_at ASC LIMIT 1',
       [workspaceId, stage.status]
     );
@@ -401,10 +401,10 @@ export async function drainQueue(
     console.log(`[Workflow] Draining queue: advancing task ${oldest.id} from "${stage.label}" → "${nextStage.label}"`);
 
     const now = new Date().toISOString();
-    run('UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?', [nextStage.status, now, oldest.id]);
+    await run('UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?', [nextStage.status, now, oldest.id]);
 
     // Broadcast the status change
-    const updated = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [oldest.id]);
+    const updated = await queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [oldest.id]);
     if (updated) broadcast({ type: 'task_updated', payload: updated });
 
     // Trigger stage transition for the next stage (assigns agent + dispatches)

@@ -83,7 +83,7 @@ export async function POST() {
   try {
     for (const ad of sampleAds) {
       const scored = scoreInsuranceAdIntel(ad);
-      run(
+      await run(
         `INSERT OR REPLACE INTO insurance_ad_intel (
           id, keyword, keyword_language, region, page_name, page_id, ad_snapshot_url, destination_url, media_url, media_type,
           ad_copy, headline, cta, platforms, first_seen_at, last_seen_at, is_active, countries,

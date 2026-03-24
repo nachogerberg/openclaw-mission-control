@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
       sql += ' ORDER BY created_at DESC';
 
-      const sessions = queryAll<OpenClawSession>(sql, params);
+      const sessions = await queryAll<OpenClawSession>(sql, params);
       return NextResponse.json(sessions);
     }
 

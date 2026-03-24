@@ -12,8 +12,46 @@ const SYNC_INTERVAL_MS = Number(process.env.AGENT_CATALOG_SYNC_INTERVAL_MS || 60
 let lastSyncAt = 0;
 let syncing: Promise<number> | null = null;
 
+function normalizeName(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function inferWorkspace(name: string): string {
+  const n = normalizeName(name);
+  if (n.includes('drake')) return 'reclutas';
+  if (n.includes('aura') || n.includes('vanta') || n.includes('sienna') || n.includes('mason')) return 'engage';
+  if (n.includes('marcus')) return 'manta';
+  if (n.includes('insurex')) return 'insurex';
+  return 'default';
+}
+
+function inferEmoji(name: string): string {
+  const n = normalizeName(name);
+  if (n.includes('soren')) return '🧠';
+  if (n.includes('sophie')) return '📊';
+  if (n.includes('drake')) return '💼';
+  if (n.includes('vanta')) return '✨';
+  if (n.includes('sienna')) return '🎨';
+  if (n.includes('mason')) return '⚙️';
+  if (n.includes('marcus')) return '📉';
+  if (n.includes('scout')) return '🛰️';
+  if (n.includes('atlas')) return '🗺️';
+  if (n.includes('aura')) return '🔥';
+  return '🔗';
+}
+
 function normalizeRole(name: string): string {
-  const n = name.toLowerCase();
+  const n = normalizeName(name);
+  if (n.includes('soren')) return 'chief_of_staff';
+  if (n.includes('sophie')) return 'data_intelligence';
+  if (n.includes('drake')) return 'revenue_ops';
+  if (n.includes('vanta')) return 'portfolio_cmo';
+  if (n.includes('sienna')) return 'creative_performance';
+  if (n.includes('mason')) return 'revenue_operations';
+  if (n.includes('marcus')) return 'trading_ops';
+  if (n.includes('scout')) return 'research';
+  if (n.includes('atlas')) return 'mission_control_pm';
+  if (n.includes('aura')) return 'engage_primary';
   if (n.includes('learn')) return 'learner';
   if (n.includes('test')) return 'tester';
   if (n.includes('review') || n.includes('verif')) return 'reviewer';
@@ -39,39 +77,45 @@ export async function syncGatewayAgentsToCatalog(options?: { force?: boolean; re
     }
 
     const gatewayAgents = (await client.listAgents()) as GatewayAgent[];
-    const existing = queryAll<{ id: string; gateway_agent_id: string | null }>(
-      `SELECT id, gateway_agent_id FROM agents WHERE gateway_agent_id IS NOT NULL`
+    const existing = await queryAll<{ id: string; gateway_agent_id: string | null; name: string }>(
+      `SELECT id, gateway_agent_id, name FROM agents`
     );
-    const existingByGatewayId = new Map(existing.map((a) => [a.gateway_agent_id, a.id]));
+    const existingByGatewayId = new Map(existing.filter((a) => a.gateway_agent_id).map((a) => [a.gateway_agent_id, a.id]));
+    const existingByName = new Map(existing.map((a) => [normalizeName(a.name), a.id]));
 
     let changed = 0;
     const ts = new Date().toISOString();
 
-    transaction(() => {
+    await transaction(async () => {
       for (const ga of gatewayAgents) {
         const gatewayId = ga.id || ga.name;
         if (!gatewayId) continue;
 
         const name = ga.name || ga.label || gatewayId;
         const role = normalizeRole(name);
-        const existingId = existingByGatewayId.get(gatewayId) || null;
+        const workspaceId = inferWorkspace(name);
+        const avatar = inferEmoji(name);
+        const existingId = existingByGatewayId.get(gatewayId) || existingByName.get(normalizeName(name)) || null;
 
         if (existingId) {
-          run(
-            `UPDATE agents SET name = ?, role = ?, model = COALESCE(?, model), source = 'gateway', updated_at = ? WHERE id = ?`,
-            [name, role, ga.model || null, ts, existingId]
+          await run(
+            `UPDATE agents
+             SET name = ?, role = ?, workspace_id = COALESCE(workspace_id, ?), avatar_emoji = COALESCE(NULLIF(avatar_emoji, '🤖'), ?),
+                 model = COALESCE(?, model), source = 'gateway', gateway_agent_id = COALESCE(gateway_agent_id, ?), updated_at = ?
+             WHERE id = ?`,
+            [name, role, workspaceId, avatar, ga.model || null, gatewayId, ts, existingId]
           );
         } else {
-          run(
+          await run(
             `INSERT INTO agents (id, name, role, description, avatar_emoji, is_master, workspace_id, model, source, gateway_agent_id, created_at, updated_at)
-             VALUES (lower(hex(randomblob(16))), ?, ?, ?, '🔗', 0, 'default', ?, 'gateway', ?, ?, ?)`,
-            [name, role, `Auto-synced from OpenClaw (${gatewayId})`, ga.model || null, gatewayId, ts, ts]
+             VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?, 0, ?, ?, 'gateway', ?, ?, ?)`,
+            [name, role, `Auto-synced from OpenClaw (${gatewayId})`, avatar, workspaceId, ga.model || null, gatewayId, ts, ts]
           );
         }
         changed += 1;
       }
 
-      run(
+      await run(
         `INSERT INTO events (id, type, message, metadata, created_at)
          VALUES (lower(hex(randomblob(16))), 'system', ?, ?, ?)`,
         [
@@ -107,9 +151,9 @@ export function ensureCatalogSyncScheduled(): void {
   });
 }
 
-export function getAgentByPreferredRoles(taskId: string, preferredRoles: string[]): { id: string; name: string } | null {
+export async function getAgentByPreferredRoles(taskId: string, preferredRoles: string[]): Promise<{ id: string; name: string } | null> {
   for (const role of preferredRoles) {
-    const byTaskRole = queryOne<{ id: string; name: string }>(
+    const byTaskRole = await queryOne<{ id: string; name: string }>(
       `SELECT a.id, a.name
        FROM task_roles tr
        JOIN agents a ON a.id = tr.agent_id
@@ -119,7 +163,7 @@ export function getAgentByPreferredRoles(taskId: string, preferredRoles: string[
     );
     if (byTaskRole) return byTaskRole;
 
-    const byGlobalRole = queryOne<{ id: string; name: string }>(
+    const byGlobalRole = await queryOne<{ id: string; name: string }>(
       `SELECT id, name FROM agents WHERE role = ? AND status != 'offline' ORDER BY updated_at DESC LIMIT 1`,
       [role]
     );

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryAll } from '@/lib/db';
-import { safeJsonParse, type InsuranceAdIntelRecord } from '@/lib/insurance-ad-intel';
+import { safeJsonParse, type InsuranceAdIntelRecord, buildMetaAdLibraryUrl } from '@/lib/insurance-ad-intel';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
 
     values.push(limit);
 
-    const rows = queryAll<any>(
-      `SELECT * FROM insurance_ad_intel WHERE ${where.join(' AND ')} ORDER BY ${orderBy} LIMIT ?`,
+    const rows = await queryAll<any>(
+      `SELECT * FROM insurance_ad_intel WHERE ${where.join(' AND ')} ORDER BY CASE WHEN id LIKE 'real-%' THEN 0 ELSE 1 END, ${orderBy} LIMIT ?`,
       values
     );
 
@@ -65,9 +65,10 @@ export async function GET(request: NextRequest) {
       countries: safeJsonParse<string[]>(row.countries, []),
       score_breakdown: safeJsonParse<Record<string, number>>(row.score_breakdown, {}),
       tags: safeJsonParse<string[]>(row.tags, []),
+      ad_library_url: buildMetaAdLibraryUrl(row),
     }));
 
-    const keywords = queryAll<{ keyword: string; keyword_language: string; region: string; count: number }>(
+    const keywords = await queryAll<{ keyword: string; keyword_language: string; region: string; count: number }>(
       `SELECT keyword, keyword_language, region, COUNT(*) as count FROM insurance_ad_intel GROUP BY keyword, keyword_language, region ORDER BY count DESC, keyword ASC`
     );
 

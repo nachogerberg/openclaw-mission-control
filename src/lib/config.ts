@@ -121,9 +121,30 @@ export function expandPath(path: string): string {
  * Used by orchestration module and other server-side modules
  */
 export function getMissionControlUrl(): string {
-  // Server-side: use env var or auto-detect
+  // Server-side: prefer explicit env, then platform-provided public URLs, then localhost
   if (typeof window === 'undefined') {
-    return process.env.MISSION_CONTROL_URL || `http://localhost:${process.env.PORT || '4000'}`;
+    if (process.env.MISSION_CONTROL_URL) {
+      return process.env.MISSION_CONTROL_URL;
+    }
+
+    const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+    if (vercelProductionUrl) {
+      return vercelProductionUrl.startsWith('http')
+        ? vercelProductionUrl
+        : `https://${vercelProductionUrl}`;
+    }
+
+    const vercelUrl = process.env.VERCEL_URL;
+    if (vercelUrl) {
+      return vercelUrl.startsWith('http') ? vercelUrl : `https://${vercelUrl}`;
+    }
+
+    const appUrl = process.env.APP_URL || process.env.URL;
+    if (appUrl) {
+      return appUrl;
+    }
+
+    return `http://localhost:${process.env.PORT || '4000'}`;
   }
 
   // Client-side: use config

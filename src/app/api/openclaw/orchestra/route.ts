@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const workspaceId = searchParams.get('workspace_id') || 'default';
 
     // Get all master agents in the workspace
-    const orchestrators = queryAll<{
+    const orchestrators = await queryAll<{
       id: string;
       name: string;
       role: string;
