@@ -60,3 +60,179 @@
 [sync] 2026-03-25T03:40:36.586Z | 2463ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
 [sync] 2026-03-25T03:41:06.291Z | 2168ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
 [sync] 2026-03-25T03:41:36.157Z | 2033ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:42:06.076Z | 1951ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:42:36.137Z | 2011ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:43:06.346Z | 2219ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:43:36.084Z | 1955ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:44:06.171Z | 2041ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:44:36.097Z | 1966ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:45:06.109Z | 1978ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:45:36.058Z | 1926ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:46:06.290Z | 2158ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:46:36.188Z | 2055ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:47:06.156Z | 2022ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:47:36.121Z | 1986ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:48:06.130Z | 1994ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:48:36.149Z | 2013ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:49:06.253Z | 2115ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] BAMC HQ → OpenClaw Dashboard sync
+[sync] Mode: watch (30s)
+[sync] 2026-03-25T03:50:00.385Z | 34942ms | agents: 7, tasks: 26, events: 100
+[sync] Watching...
+[sync] 2026-03-25T03:51:02.762Z | 32374ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:51:30.040Z | 29652ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:52:07.738Z | 37350ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:52:33.331Z | 32942ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:53:01.109Z | 30719ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:53:28.497Z | 28106ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:53:58.728Z | 28337ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:54:28.223Z | 27831ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:54:58.871Z | 28478ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:55:29.692Z | 29277ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:56:02.322Z | 31899ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:56:29.895Z | 29469ms | agents: 7, tasks: 26, events: 99
+[sync] 2026-03-25T03:56:58.097Z | 27669ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:57:31.289Z | 30859ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:57:59.194Z | 28763ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:58:29.685Z | 29251ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:59:01.149Z | 30714ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T03:59:29.849Z | 29413ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:00:01.197Z | 30759ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:00:27.691Z | 27253ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:01:00.079Z | 29640ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:01:29.740Z | 29299ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:02:11.114Z | 40671ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:02:33.477Z | 33033ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:03:03.833Z | 33386ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:03:33.690Z | 33242ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:04:04.460Z | 34009ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:04:33.111Z | 32660ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:05:03.077Z | 32624ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:05:34.189Z | 33734ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:06:04.121Z | 33663ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:06:33.708Z | 33250ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:07:01.644Z | 31184ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:07:32.883Z | 32420ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:08:03.687Z | 33222ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:08:31.897Z | 31430ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:09:02.434Z | 31965ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:09:34.152Z | 33680ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:10:05.445Z | 34972ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:10:33.826Z | 33352ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:11:03.495Z | 33019ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:11:39.432Z | 38953ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:12:07.868Z | 37388ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:12:34.053Z | 33570ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:13:05.206Z | 34721ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:13:34.391Z | 33903ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:14:07.012Z | 36521ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:14:38.474Z | 37983ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:15:05.042Z | 34550ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:15:33.639Z | 33145ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:16:03.506Z | 33010ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:16:33.125Z | 32626ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:17:04.088Z | 33587ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:17:33.295Z | 32792ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:18:04.888Z | 34383ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:18:33.139Z | 32632ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:19:02.518Z | 32010ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:19:33.135Z | 32626ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:20:04.007Z | 33498ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:20:33.197Z | 32685ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:21:03.238Z | 32724ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:21:33.904Z | 33390ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:22:07.932Z | 37418ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:22:34.394Z | 33879ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:23:07.857Z | 37340ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:23:36.369Z | 35850ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:23:55.390Z | 24871ms | agents: 7, tasks: 26
+[sync] 2026-03-25T04:24:30.156Z | 29635ms | agents: 7, tasks: 26
+[sync] 2026-03-25T04:25:07.731Z | 37209ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:25:38.997Z | 38473ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:26:06.304Z | 35779ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:26:33.830Z | 33304ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:27:06.012Z | 35485ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:27:34.135Z | 33606ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:28:07.459Z | 36928ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:28:34.282Z | 33749ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:29:04.733Z | 34199ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:29:35.021Z | 34484ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:30:08.597Z | 38058ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:30:37.140Z | 36599ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:31:06.870Z | 36331ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:31:28.547Z | 28009ms | agents: 7, tasks: 26
+[sync] 2026-03-25T04:32:09.602Z | 39064ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:32:40.263Z | 39724ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:33:08.499Z | 37959ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:33:40.213Z | 39672ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:34:09.409Z | 38867ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:34:36.102Z | 35558ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:35:07.639Z | 37093ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:35:38.148Z | 37599ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:36:07.878Z | 37328ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:36:40.334Z | 39783ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:37:09.006Z | 38453ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:37:37.813Z | 37258ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:38:08.103Z | 37545ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:38:38.250Z | 37691ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:39:08.299Z | 37739ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:39:40.764Z | 40202ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:40:08.722Z | 38158ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:40:38.779Z | 38213ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:41:08.076Z | 37509ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:41:36.524Z | 35955ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:42:09.003Z | 38432ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:42:40.008Z | 39434ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:43:10.013Z | 39438ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:43:27.140Z | 26563ms | agents: 7, tasks: 26
+[sync] 2026-03-25T04:44:00.546Z | 29967ms | agents: 7, tasks: 26
+[sync] 2026-03-25T04:44:39.407Z | 38826ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:45:09.132Z | 38549ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:45:38.465Z | 37879ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:46:07.856Z | 37268ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:46:36.871Z | 36280ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:47:06.515Z | 35922ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:47:37.610Z | 37015ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:48:08.381Z | 37784ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:48:38.662Z | 38062ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:49:09.438Z | 38836ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:49:37.461Z | 36857ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:50:07.952Z | 37346ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:50:36.331Z | 35722ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:51:07.910Z | 37299ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:51:25.876Z | 25264ms | agents: 7, tasks: 26
+[sync] 2026-03-25T04:52:00.324Z | 29710ms | agents: 7, tasks: 26
+[sync] 2026-03-25T04:52:40.721Z | 40105ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:53:08.531Z | 37913ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:53:38.079Z | 37460ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:54:09.040Z | 38418ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:54:36.234Z | 35612ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:55:07.745Z | 37121ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:55:36.854Z | 36229ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:56:09.212Z | 38587ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:56:37.247Z | 36620ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:57:07.576Z | 36947ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:57:36.900Z | 36270ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:58:09.092Z | 38460ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:58:36.495Z | 35862ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:59:07.810Z | 37177ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T04:59:37.733Z | 37097ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:00:08.463Z | 37827ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:00:38.611Z | 37972ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:01:07.753Z | 37112ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:01:37.686Z | 37043ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:02:07.480Z | 36835ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:02:38.868Z | 38221ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:03:09.572Z | 38925ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:03:38.565Z | 37917ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:04:06.270Z | 35621ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:04:36.759Z | 36109ms | agents: 7, tasks: 26, events: 100
+[sync] BAMC HQ → OpenClaw Dashboard sync
+[sync] Mode: watch (30s)
+[sync] 2026-03-25T05:05:15.699Z | 30129ms | agents: 7, tasks: 26
+[sync] Watching...
+[sync] 2026-03-25T05:06:26.362Z | 40661ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:06:53.857Z | 38154ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:07:23.223Z | 37519ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:07:54.750Z | 39045ms | agents: 7, tasks: 26, events: 100
+[sync] 2026-03-25T05:08:23.591Z | 37885ms | agents: 7, tasks: 26, events: 100

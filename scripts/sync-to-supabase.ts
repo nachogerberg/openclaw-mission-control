@@ -152,10 +152,37 @@ async function syncActivityFeed(): Promise<number> {
   return synced;
 }
 
+// ── Cleanup stale data ─────────────────────────────────
+async function cleanupStaleData(): Promise<void> {
+  // Remove old agent-* prefixed records from previous SQLite sync
+  const validAgentIds = Object.keys(AGENT_DEFS);
+
+  // Update any tasks referencing old agent-* IDs
+  const mappings: Record<string, string> = {
+    'agent-soren': 'soren', 'agent-drake': 'drake',
+    'agent-sophie': 'sophie', 'agent-vanta': 'vanta',
+  };
+  for (const [old, neu] of Object.entries(mappings)) {
+    await supabase.from('oc_tasks').update({ assigned_agent_id: neu }).eq('assigned_agent_id', old);
+    await supabase.from('oc_events').update({ agent_id: neu }).eq('agent_id', old);
+  }
+
+  // Delete agent-* records
+  await supabase.from('oc_agents').delete().like('id', 'agent-%');
+  // Delete task-* records (old SQLite IDs)
+  await supabase.from('oc_tasks').delete().like('id', 'task-%');
+}
+
 // ── Main sync ──────────────────────────────────────────
+let cleanupDone = false;
 async function syncAll(): Promise<void> {
   const start = Date.now();
   const results: string[] = [];
+
+  // One-time cleanup of stale data
+  if (!cleanupDone) {
+    try { await cleanupStaleData(); cleanupDone = true; } catch {}
+  }
 
   try {
     const agentCount = await syncAgents();
