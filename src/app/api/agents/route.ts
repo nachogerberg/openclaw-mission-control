@@ -20,15 +20,22 @@ export async function GET(request: NextRequest) {
       `);
     }
 
-    // Reconcile status badges from real active-task state so stale DB flags don't keep agents green forever
-    const activeRows = await queryAll<{ assigned_agent_id: string; c: number }>(
-      `SELECT assigned_agent_id, COUNT(*) as c
-       FROM tasks
-       WHERE assigned_agent_id IS NOT NULL
-         AND status IN ('assigned', 'in_progress', 'testing', 'verification')
-       GROUP BY assigned_agent_id`
-    );
-    const activeMap = new Map(activeRows.map(r => [r.assigned_agent_id, r.c]));
+    // Reconcile status badges from real active-task state
+    // Use simple query (no GROUP BY) for Postgres/PostgREST compatibility
+    let activeMap = new Map<string, number>();
+    try {
+      const activeTasks = await queryAll<{ assigned_agent_id: string }>(
+        'SELECT assigned_agent_id FROM tasks WHERE status IN (?, ?, ?, ?)',
+        ['assigned', 'in_progress', 'testing', 'verification']
+      );
+      for (const t of activeTasks) {
+        if (t.assigned_agent_id) {
+          activeMap.set(t.assigned_agent_id, (activeMap.get(t.assigned_agent_id) || 0) + 1);
+        }
+      }
+    } catch {
+      // Silently skip status reconciliation if query fails
+    }
 
     const reconciledAgents = agents.map((agent) => {
       if (agent.status === 'offline') return agent;
