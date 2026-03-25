@@ -146,18 +146,34 @@ async function execViaPostgREST(sql: string, params: unknown[]): Promise<{ rows:
     const whereMatch = rest.match(/WHERE\s+(.*?)(?:ORDER|LIMIT|GROUP|$)/i);
     if (whereMatch) {
       const conditions = whereMatch[1].trim();
-      // Parse simple conditions: column = $N, column != $N, column IN (...)
-      const parts = conditions.split(/\s+AND\s+/i);
-      for (const part of parts) {
-        const eqMatch = part.match(/(\w+)\s*=\s*\$(\d+)/);
-        const neqMatch = part.match(/(\w+)\s*!=\s*\$(\d+)/);
-        const inMatch = part.match(/(\w+)\s+IN\s*\(/i);
-        if (eqMatch) {
-          query = query.eq(eqMatch[1], params[parseInt(eqMatch[2]) - 1]);
-        } else if (neqMatch) {
-          query = query.neq(neqMatch[1], params[parseInt(neqMatch[2]) - 1]);
-        } else if (part.includes('1=1')) {
-          // skip
+
+      // Handle OR conditions: col1 = $1 OR col2 = $2
+      if (/\bOR\b/i.test(conditions) && !/\bAND\b/i.test(conditions)) {
+        const orParts = conditions.split(/\s+OR\s+/i);
+        const orFilters: string[] = [];
+        for (const part of orParts) {
+          const eqMatch = part.trim().match(/(\w+)\s*=\s*\$(\d+)/);
+          if (eqMatch) {
+            const val = params[parseInt(eqMatch[2]) - 1];
+            orFilters.push(`${eqMatch[1]}.eq.${val}`);
+          }
+        }
+        if (orFilters.length > 0) {
+          query = query.or(orFilters.join(','));
+        }
+      } else {
+        // Parse AND conditions
+        const parts = conditions.split(/\s+AND\s+/i);
+        for (const part of parts) {
+          const eqMatch = part.match(/(\w+)\s*=\s*\$(\d+)/);
+          const neqMatch = part.match(/(\w+)\s*!=\s*\$(\d+)/);
+          if (eqMatch) {
+            query = query.eq(eqMatch[1], params[parseInt(eqMatch[2]) - 1]);
+          } else if (neqMatch) {
+            query = query.neq(neqMatch[1], params[parseInt(neqMatch[2]) - 1]);
+          } else if (part.includes('1=1')) {
+            // skip
+          }
         }
       }
     }
