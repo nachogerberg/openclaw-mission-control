@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // Reconcile status badges from real active-task state
     // Use simple query (no GROUP BY) for Postgres/PostgREST compatibility
-    let activeMap = new Map<string, number>();
+    const activeMap = new Map<string, number>();
     try {
       const activeTasks = await queryAll<{ assigned_agent_id: string }>(
         'SELECT assigned_agent_id FROM tasks WHERE status IN (?, ?, ?, ?)',
