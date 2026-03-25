@@ -17,58 +17,43 @@ export async function GET(request: NextRequest) {
     const workspaceId = searchParams.get('workspace_id');
     const assignedAgentId = searchParams.get('assigned_agent_id');
 
-    let sql = `
-      SELECT
-        t.*,
-        aa.name as assigned_agent_name,
-        aa.avatar_emoji as assigned_agent_emoji,
-        ca.name as created_by_agent_name
-      FROM tasks t
-      LEFT JOIN agents aa ON t.assigned_agent_id = aa.id
-      LEFT JOIN agents ca ON t.created_by_agent_id = ca.id
-      WHERE 1=1
-    `;
+    // Fetch tasks (simple query without JOINs for Postgres compatibility)
+    let sql = 'SELECT * FROM tasks WHERE 1=1';
     const params: unknown[] = [];
 
     if (status) {
-      // Support comma-separated status values (e.g., status=inbox,testing,in_progress)
       const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
       if (statuses.length === 1) {
-        sql += ' AND t.status = ?';
+        sql += ' AND status = ?';
         params.push(statuses[0]);
       } else if (statuses.length > 1) {
-        sql += ` AND t.status IN (${statuses.map(() => '?').join(',')})`;
+        sql += ` AND status IN (${statuses.map(() => '?').join(',')})`;
         params.push(...statuses);
       }
     }
-    if (businessId) {
-      sql += ' AND t.business_id = ?';
-      params.push(businessId);
-    }
-    if (workspaceId) {
-      sql += ' AND t.workspace_id = ?';
-      params.push(workspaceId);
-    }
-    if (assignedAgentId) {
-      sql += ' AND t.assigned_agent_id = ?';
-      params.push(assignedAgentId);
-    }
+    if (businessId) { sql += ' AND business_id = ?'; params.push(businessId); }
+    if (workspaceId) { sql += ' AND workspace_id = ?'; params.push(workspaceId); }
+    if (assignedAgentId) { sql += ' AND assigned_agent_id = ?'; params.push(assignedAgentId); }
 
-    sql += ' ORDER BY t.created_at DESC';
+    sql += ' ORDER BY created_at DESC';
 
-    const tasks = await queryAll<Task & { assigned_agent_name?: string; assigned_agent_emoji?: string; created_by_agent_name?: string }>(sql, params);
+    const tasks = await queryAll<Task>(sql, params);
 
-    // Transform to include nested agent info
-    const transformedTasks = tasks.map((task) => ({
-      ...task,
-      assigned_agent: task.assigned_agent_id
-        ? {
-            id: task.assigned_agent_id,
-            name: task.assigned_agent_name,
-            avatar_emoji: task.assigned_agent_emoji,
-          }
-        : undefined,
-    }));
+    // Fetch agents for name resolution (separate query, no JOINs)
+    const agents = await queryAll<{ id: string; name: string; avatar_emoji: string }>('SELECT id, name, avatar_emoji FROM agents');
+    const agentMap = new Map(agents.map(a => [a.id, a]));
+
+    const transformedTasks = tasks.map((task) => {
+      const assigned = task.assigned_agent_id ? agentMap.get(task.assigned_agent_id) : undefined;
+      const creator = task.created_by_agent_id ? agentMap.get(task.created_by_agent_id) : undefined;
+      return {
+        ...task,
+        assigned_agent_name: assigned?.name ?? null,
+        assigned_agent_emoji: assigned?.avatar_emoji ?? null,
+        created_by_agent_name: creator?.name ?? null,
+        assigned_agent: assigned ? { id: task.assigned_agent_id, name: assigned.name, avatar_emoji: assigned.avatar_emoji } : undefined,
+      };
+    });
 
     return NextResponse.json(transformedTasks);
   } catch (error) {
