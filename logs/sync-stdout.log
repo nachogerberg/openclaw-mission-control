@@ -1,0 +1,62 @@
+[sync] Starting SQLite→Supabase sync
+[sync] DB: /Users/joshperez/openclaw-workspace/openclaw1/.openclaw/workspace/mission-control/mission-control.db
+[sync] Supabase: https://kopfxycuagqvvihwjvor.supabase.co
+[sync] Mode: watch (30s interval)
+
+[sync] 2026-03-25T03:14:04.049Z | 1982ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] Watching for changes every 30s...
+[sync] 2026-03-25T03:14:36.000Z | 1947ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:15:06.210Z | 2156ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:15:36.066Z | 2012ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:16:06.025Z | 1970ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:16:36.101Z | 2046ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:17:06.043Z | 1987ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:17:35.873Z | 1816ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:18:06.071Z | 2013ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:18:36.050Z | 1991ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:19:06.040Z | 1981ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:19:36.071Z | 1996ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:20:06.077Z | 1995ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:20:36.125Z | 2040ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:21:06.006Z | 1920ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:21:35.998Z | 1911ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:22:06.079Z | 1990ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:22:36.146Z | 2056ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:23:06.031Z | 1940ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:23:35.948Z | 1856ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:24:06.112Z | 2020ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:24:36.156Z | 2063ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:25:06.022Z | 1927ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:25:35.988Z | 1892ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:26:05.963Z | 1866ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:26:35.987Z | 1889ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:27:05.936Z | 1837ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:27:36.478Z | 2379ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:28:06.185Z | 2085ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:28:36.142Z | 2042ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:29:06.060Z | 1959ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:29:36.261Z | 2158ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:30:06.122Z | 2018ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:30:36.094Z | 1990ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:31:06.038Z | 1933ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:31:36.148Z | 2043ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:32:06.080Z | 1974ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:32:36.147Z | 2040ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:33:06.275Z | 2167ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:33:36.397Z | 2287ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:34:06.198Z | 2087ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:34:36.113Z | 2002ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:35:06.054Z | 1942ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:35:36.202Z | 2089ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:36:06.130Z | 2016ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:36:36.181Z | 2067ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:37:06.180Z | 2065ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:37:36.060Z | 1943ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:38:06.080Z | 1963ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:38:36.195Z | 2076ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:39:06.134Z | 2015ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:39:36.080Z | 1960ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:40:06.241Z | 2119ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:40:36.586Z | 2463ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:41:06.291Z | 2168ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7
+[sync] 2026-03-25T03:41:36.157Z | 2033ms | oc_workspaces: 5, oc_agents: 4, oc_tasks: 8, oc_events: 9, oc_workflow_templates: 7

@@ -11,42 +11,38 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const since = searchParams.get('since'); // ISO timestamp for polling
 
-    let sql = `
-      SELECT e.*, a.name as agent_name, a.avatar_emoji as agent_emoji, t.title as task_title
-      FROM events e
-      LEFT JOIN agents a ON e.agent_id = a.id
-      LEFT JOIN tasks t ON e.task_id = t.id
-      WHERE 1=1
-    `;
+    // Simple queries without JOINs for PostgREST compatibility
+    let sql = 'SELECT * FROM events WHERE 1=1';
     const params: unknown[] = [];
 
     if (since) {
-      sql += ' AND e.created_at > ?';
+      sql += ' AND created_at > ?';
       params.push(since);
     }
 
-    sql += ' ORDER BY e.created_at DESC LIMIT ?';
-    params.push(limit);
+    sql += ' ORDER BY created_at DESC';
 
-    const events = await queryAll<Event & { agent_name?: string; agent_emoji?: string; task_title?: string }>(sql, params);
+    const events = await queryAll<Event>(sql, params);
+    const limited = events.slice(0, limit);
 
-    // Transform to include nested info
-    const transformedEvents = events.map((event) => ({
-      ...event,
-      agent: event.agent_id
-        ? {
-            id: event.agent_id,
-            name: event.agent_name,
-            avatar_emoji: event.agent_emoji,
-          }
-        : undefined,
-      task: event.task_id
-        ? {
-            id: event.task_id,
-            title: event.task_title,
-          }
-        : undefined,
-    }));
+    // Fetch agents + tasks for name resolution
+    const agents = await queryAll<{ id: string; name: string; avatar_emoji: string }>('SELECT id, name, avatar_emoji FROM agents');
+    const tasks = await queryAll<{ id: string; title: string }>('SELECT id, title FROM tasks');
+    const agentMap = new Map(agents.map(a => [a.id, a]));
+    const taskMap = new Map(tasks.map(t => [t.id, t]));
+
+    const transformedEvents = limited.map((event) => {
+      const agent = event.agent_id ? agentMap.get(event.agent_id) : undefined;
+      const task = event.task_id ? taskMap.get(event.task_id) : undefined;
+      return {
+        ...event,
+        agent_name: agent?.name ?? null,
+        agent_emoji: agent?.avatar_emoji ?? null,
+        task_title: task?.title ?? null,
+        agent: agent ? { id: event.agent_id, name: agent.name, avatar_emoji: agent.avatar_emoji } : undefined,
+        task: task ? { id: event.task_id, title: task.title } : undefined,
+      };
+    });
 
     return NextResponse.json(transformedEvents);
   } catch (error) {
