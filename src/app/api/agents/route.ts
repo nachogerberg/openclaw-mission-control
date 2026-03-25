@@ -11,14 +11,15 @@ export async function GET(request: NextRequest) {
     
     let agents: Agent[];
     if (workspaceId) {
-      agents = await queryAll<Agent>(`
-        SELECT * FROM agents WHERE workspace_id = ? ORDER BY is_master DESC, name ASC
-      `, [workspaceId]);
+      agents = await queryAll<Agent>(
+        'SELECT * FROM agents WHERE workspace_id = ?',
+        [workspaceId]
+      );
     } else {
-      agents = await queryAll<Agent>(`
-        SELECT * FROM agents ORDER BY is_master DESC, name ASC
-      `);
+      agents = await queryAll<Agent>('SELECT * FROM agents');
     }
+    // Sort in JS to avoid multi-column ORDER BY issues with PostgREST
+    agents.sort((a, b) => (b.is_master ? 1 : 0) - (a.is_master ? 1 : 0) || a.name.localeCompare(b.name));
 
     // Reconcile status badges from real active-task state
     // Use simple query (no GROUP BY) for Postgres/PostgREST compatibility
