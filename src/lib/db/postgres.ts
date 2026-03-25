@@ -167,21 +167,40 @@ async function execViaPostgREST(sql: string, params: unknown[]): Promise<{ rows:
         for (const part of parts) {
           const eqMatch = part.match(/(\w+)\s*=\s*\$(\d+)/);
           const neqMatch = part.match(/(\w+)\s*!=\s*\$(\d+)/);
+          // Handle IN clause: col IN ($1, $2, ...)
+          const inMatch = part.match(/(\w+)\s+IN\s*\(([^)]+)\)/i);
           if (eqMatch) {
             query = query.eq(eqMatch[1], params[parseInt(eqMatch[2]) - 1]);
           } else if (neqMatch) {
             query = query.neq(neqMatch[1], params[parseInt(neqMatch[2]) - 1]);
+          } else if (inMatch) {
+            const col = inMatch[1];
+            const paramRefs = inMatch[2].split(',').map(s => s.trim());
+            const values = paramRefs.map(ref => {
+              const m = ref.match(/\$(\d+)/);
+              return m ? params[parseInt(m[1]) - 1] : ref.replace(/'/g, '');
+            });
+            query = query.in(col, values);
           } else if (part.includes('1=1')) {
             // skip
+          } else if (part.match(/(\w+)\s+IS\s+NOT\s+NULL/i)) {
+            const col = part.match(/(\w+)\s+IS\s+NOT\s+NULL/i)![1];
+            query = query.not(col, 'is', null);
           }
         }
       }
     }
 
-    // Parse ORDER BY
-    const orderMatch = rest.match(/ORDER\s+BY\s+([\w.]+)\s*(ASC|DESC)?/i);
+    // Parse ORDER BY (supports multiple columns)
+    const orderMatch = rest.match(/ORDER\s+BY\s+(.+?)(?:LIMIT|$)/i);
     if (orderMatch) {
-      query = query.order(orderMatch[1], { ascending: (orderMatch[2] || 'ASC').toUpperCase() === 'ASC' });
+      const orderCols = orderMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+      for (const col of orderCols) {
+        const m = col.match(/([\w.]+)\s*(ASC|DESC)?/i);
+        if (m) {
+          query = query.order(m[1], { ascending: (m[2] || 'ASC').toUpperCase() === 'ASC' });
+        }
+      }
     }
 
     // Parse LIMIT
