@@ -15,7 +15,7 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://kopfxycuagqvvihwjvor.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const WATCH_MODE = process.argv.includes('--watch');
-const SYNC_INTERVAL = 30_000;
+const SYNC_INTERVAL = 60_000; // 60 seconds (was 30s — reduced to avoid DB overload)
 
 if (!SUPABASE_KEY) {
   console.error('Missing SUPABASE_SERVICE_ROLE_KEY');
@@ -131,7 +131,7 @@ async function syncActivityFeed(): Promise<number> {
     .from('activity_log')
     .select('id, agent, action, category, details, created_at')
     .order('created_at', { ascending: false })
-    .limit(100);
+    .limit(30); // Reduced from 100 to avoid DB overload
 
   if (!logs || logs.length === 0) return 0;
 
@@ -144,10 +144,12 @@ async function syncActivityFeed(): Promise<number> {
     created_at: l.created_at,
   }));
 
+  // Batch upsert (max 50 at a time to avoid overloading)
   let synced = 0;
-  for (const row of rows) {
-    const { error } = await supabase.from('oc_events').upsert(row, { onConflict: 'id' });
-    if (!error) synced++;
+  for (let i = 0; i < rows.length; i += 50) {
+    const batch = rows.slice(i, i + 50);
+    const { error } = await supabase.from('oc_events').upsert(batch, { onConflict: 'id' });
+    if (!error) synced += batch.length;
   }
   return synced;
 }
