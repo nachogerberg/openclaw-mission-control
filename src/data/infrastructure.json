@@ -1,0 +1,179 @@
+{
+  "lastUpdated": "2026-04-11T09:05:00.000Z",
+  "version": 4,
+  "layers": [
+    {
+      "id": "devices",
+      "label": "Local Devices",
+      "emoji": "🖥",
+      "color": "#1f6feb",
+      "connector": null,
+      "nodes": [
+        {
+          "id": "mac-mini",
+          "label": "Mac Mini (Primary HQ)",
+          "desc": "All core BAMC agents and automations run here.",
+          "status": "live",
+          "badges": ["Soren / Aegis", "Drake", "Sophie", "Scout"]
+        },
+        {
+          "id": "engage-device",
+          "label": "Engage Media Device",
+          "desc": "Dedicated Engage-side OpenClaw session and repo sync node.",
+          "status": "live",
+          "badges": ["Engage Coordinator", "Supabase Connected", "GitHub Syncing"]
+        }
+      ]
+    },
+    {
+      "id": "github",
+      "label": "GitHub - Private Repositories",
+      "emoji": "🐙",
+      "color": "#8957e5",
+      "connector": "git push / pull, auto-deploy trigger, code sharing bridge",
+      "nodes": [
+        {
+          "id": "repo-bamc",
+          "label": "bamc-mission-control",
+          "desc": "HQ dashboard for KPIs, agents, tasks, and ops overview.",
+          "status": "live",
+          "badges": ["Private", "Vercel Auto-Deploy"]
+        },
+        {
+          "id": "repo-engage-mc",
+          "label": "engage-mission-control",
+          "desc": "Engage Media coordinator hub for pipeline and agent dispatch.",
+          "status": "live",
+          "badges": ["Private", "Scaffolded"]
+        },
+        {
+          "id": "repo-engage-clients",
+          "label": "engage-client-dashboards",
+          "desc": "Per-client reporting views, metrics, campaigns, and alerts.",
+          "status": "live",
+          "badges": ["Private", "Scaffolded"]
+        },
+        {
+          "id": "repo-reclutas",
+          "label": "reclutas-dashboard-tools",
+          "desc": "Agent tracking, sales pipeline, GHL integration, and Drake tools.",
+          "status": "live",
+          "badges": ["Private", "Scaffolded"]
+        },
+        {
+          "id": "repo-sops",
+          "label": "agent-sops",
+          "desc": "SOPs, playbooks, and runbooks for the agent network.",
+          "status": "live",
+          "badges": ["Private", "All core agents"]
+        },
+        {
+          "id": "repo-docs",
+          "label": "docs-and-skills",
+          "desc": "Shared agent skills, prompt libraries, and internal docs.",
+          "status": "live",
+          "badges": ["Private", "Synced"]
+        }
+      ]
+    },
+    {
+      "id": "cloud",
+      "label": "Cloud Services",
+      "emoji": "☁️",
+      "color": "#2ea043",
+      "connector": "auto-deploy on push, DB reads/writes, agent orchestration",
+      "nodes": [
+        {
+          "id": "vercel",
+          "label": "▲ Vercel",
+          "desc": "Hosts the dashboard fleet with auto-deploys on GitHub push.",
+          "status": "live",
+          "badges": ["BAMC Mission Control", "Env Secrets"]
+        },
+        {
+          "id": "supabase",
+          "label": "🟢 Supabase",
+          "desc": "Shared database cluster with RLS active and kopfxy restored.",
+          "status": "live",
+          "badges": ["RLS Active", "kopfxy Restored"]
+        },
+        {
+          "id": "openclaw",
+          "label": "🤖 OpenClaw Gateway",
+          "desc": "Agent orchestration layer routing sessions, tools, and messages.",
+          "status": "live",
+          "badges": ["Mac Mini :18789", "Telegram + Discord"]
+        }
+      ]
+    },
+    {
+      "id": "comms",
+      "label": "Communication Channels",
+      "emoji": "💬",
+      "color": "#d29922",
+      "connector": "messages, notifications, API calls",
+      "nodes": [
+        {
+          "id": "telegram",
+          "label": "📱 Telegram",
+          "desc": "Nacho's primary channel. Soren and Sophie connected.",
+          "status": "live",
+          "badges": ["Soren", "Sophie"]
+        },
+        {
+          "id": "discord-bamc",
+          "label": "🎮 Discord - BAMC",
+          "desc": "HQ org for briefs, ops feeds, and research.",
+          "status": "live",
+          "badges": ["Soren bot", "Drake bot"]
+        },
+        {
+          "id": "discord-reclutas",
+          "label": "🎮 Discord - Reclutas",
+          "desc": "Team ops and role-based monitoring for Drake.",
+          "status": "live",
+          "badges": ["Drake bot", "Role-based access"]
+        },
+        {
+          "id": "ghl",
+          "label": "⚡ GoHighLevel (GHL)",
+          "desc": "CRM for Reclutas and InsureX sync workflows.",
+          "status": "live",
+          "badges": ["Calls Sync Operational", "Drake API Connected"]
+        }
+      ]
+    }
+  ],
+  "security": [
+    {
+      "icon": "🔒",
+      "label": "GitHub repos are private",
+      "desc": "Only accessible by approved operators and service accounts."
+    },
+    {
+      "icon": "🔑",
+      "label": "Secrets stay out of code",
+      "desc": "API keys live in env vars, 1Password, or local ignored files."
+    },
+    {
+      "icon": "🛡",
+      "label": "Supabase RLS active",
+      "desc": "Row-level security is enforced across the production data model."
+    },
+    {
+      "icon": "🎯",
+      "label": "Scoped GitHub token",
+      "desc": "GitHub access is limited to the necessary repo scope."
+    },
+    {
+      "icon": "👁",
+      "label": "Agents pull, do not broadly push",
+      "desc": "Write paths are constrained to trusted operators and approved automations."
+    },
+    {
+      "icon": "🔐",
+      "label": "2FA on critical services",
+      "desc": "Core services use layered auth beyond password-only access."
+    }
+  ]
+}
