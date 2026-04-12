@@ -24,7 +24,10 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": [
     "node_modules",
-    "scripts/sync-clickup.ts",
-    "scripts/sync-ghl-delta.ts"
+    "scripts/**/*.ts",
+    "check-leads.ts",
+    "check-leads-temp.ts",
+    "test-check.ts",
+    "test-supabase.ts"
   ]
 }
