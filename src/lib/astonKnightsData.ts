@@ -103,6 +103,14 @@ export const akDocLinks = [
   {
     title: 'Mobile Game Architecture Plan for Claude Code',
     path: '~/.hermes/atlas/workspace/aston-knights/09-aston-knights-game-architecture-plan-for-claude-code.md'
+  },
+  {
+    title: 'v0 Initiation Master Prompt',
+    path: '~/.hermes/atlas/workspace/aston-knights/10-v0-initiation-master-prompt.md'
+  },
+  {
+    title: 'Claude Code Implementation Plan',
+    path: '~/.hermes/atlas/workspace/aston-knights/11-claude-code-implementation-plan.md'
   }
 ];
 
